@@ -82,10 +82,11 @@ Inside the `<script>` tag, in this order:
 | Health logic | `DEF`, `dk`, `isRest`, `items`, `pct`, `streak`, `xp` | Today's checklist, score, streak, XP and level (all read the plan of the date through `plan(date)`) |
 | Health screens | `vHealth`, `meter`, `chk` | Health page. Its Plan buttons open the Plan page for that date. |
 | Home and status box | `vHome`, `statusBox`, `dstat`, `lvCheck`, `plannedAhead`, `colTile`, `selfTile` | Level box (rank, XP, five stats from your last 7 days, radar chart, level-up banner), the four boxes, today's date tasks |
-| Plan (by date) | `dlabel`, `ensurePlans`, `savePlans`, `hasP`, `dp`, `tg`, `plan`, `setP`, `copyPlan`, `purgeFuture`, `migrateWeekly`, `vPlan`, `planClick`, `planChange`, `legacyPlan`, `freezeSync` | Calendar, per-date editor, copy to range, targets that start from a date. `legacyPlan`, `freezeSync` and `migrateWeekly` only run once to convert old weekday plans. |
+| Plan (by date) | `dlabel`, `ensurePlans`, `savePlans`, `hasP`, `dp`, `tg`, `plan`, `setP`, `purgeFuture`, `migrateWeekly`, `vPlan`, `planClick`, `planChange`, `legacyPlan`, `freezeSync` | Calendar, per-date editor, targets that start from a date. `legacyPlan`, `freezeSync` and `migrateWeekly` only run once to convert old weekday plans. |
 | College | `CDEF`, `sub`, `sylP`, `asgLeft`, `planSum`, `vCollege`, `cMain`, `cSem`, `cSub`, `colClick`, `colChange` | Semesters, subjects, syllabus, assignments, backlog, PDF upload (study plans are made on the Plan page) |
 | Self | `SDEF`, `tp`, `selfDates`, `planDays`, `selfPlan`, `selfTile`, `vSelf`, `sMain`, `sTop`, `selfClick`, `selfChange` | Topics, planned dates, resources, missed-notes, today's growth ticks, button to Money |
 | Books (inside the Book reading topic) | `BDEF`, `saveBooks`, `isBook`, `pgSum`, `pgDay`, `bookRead`, `vBooks` | Books with pages, pages read per date, finish-by date, day/month/year goals and history |
+| Collapsible boxes | `acc`, `UI`, the `tgl` click action | Every box on Health, College and Plan is a collapsible box, closed by default. Open or closed is remembered in the browser only (`lt:ui`), not in the database. To make a new box collapsible, wrap it: `acc('unique-id','Title','short summary',bodyHtml)`. |
 | Stats | `vStats` | Week, month and year views |
 | Money | `vMoney`, `sum` | Income, spending, budget |
 | App core | `render`, the `click` and `change` listeners, the boot function at the bottom | Draws the current screen and handles every button |
@@ -108,11 +109,10 @@ Buttons use `data-act="name"`. The click listener calls the matching code. To ad
 There are no weekly templates any more. Every plan belongs to a calendar date, so editing one date never changes another date or any past day.
 
 - Plans are saved in `plans-YYYY`. Edit them on the **Plan** page: pick a date on the calendar, then change exercise, food, tasks, study rows and Self rows.
-- **Copy to range** and **Next 7 days** copy a date's plan to other dates (this writes separate dated copies).
 - **Targets** (wake, sleep, water, protein) start from a date you choose and stay in force until the next change. Dates before that keep their old targets (`tg(date)`).
 - `plan(date)` is the one function that returns everything planned for a date. Scores, checklists, study hours and Self hours all read from it.
 - Deleting a subject or topic removes it from today and future dates only. Past dates keep it.
-- First run of this version: old weekday plans are converted into dated plans from today to the end of the year, and past days are saved with the plan they had. This happens once (`health.mig`). Use Copy to range to plan further ahead.
+- First run of this version: old weekday plans are converted into dated plans from today to the end of the year, and past days are saved with the plan they had. This happens once (`health.mig`). Plan further ahead on the Plan page, one date at a time.
 
 **Rule for new features:** if a feature compares progress against a plan or target, read it through `plan(date)` and add the needed field to the plan object in `plan()` and in the Plan page. Never use old weekday fields.
 
