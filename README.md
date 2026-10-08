@@ -42,23 +42,26 @@ Only do this on a trusted home network.
 Create `~/.config/systemd/user/life-tracker.service`:
 
 ```ini
-[Unit]
-Description=Life Tracker
-
-[Service]
-WorkingDirectory=/full/path/to/life-tracker
-ExecStart=/usr/bin/python3 server.py
-Restart=on-failure
-
-[Install]
-WantedBy=default.target
+[Unit]                                                                      
+  Description=Life Tracker                                                    
+  After=network-online.target                                                 
+                                                                              
+  [Service]                                                                   
+  WorkingDirectory=/home/keny/life-tracker                                    
+  Environment=TRACKER_PASSWORD=1234                                           
+  ExecStart=/usr/bin/python3 server.py --host 0.0.0.0                         
+  Restart=on-failure                                                          
+                                                                              
+  [Install]                                                                   
+  WantedBy=default.target 
 ```
 
 Then:
 
 ```bash
-systemctl --user daemon-reload
+systemctl --user daemon-reload                
 systemctl --user enable --now life-tracker
+systemctl --user status life-tracker
 ```
 
 ## Your data is safe
