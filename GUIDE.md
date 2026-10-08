@@ -25,15 +25,19 @@ All app data is saved as small **documents** (JSON) in one database table. The f
 
 | Document name | Holds | Shape |
 |---|---|---|
-| `health` | Health settings and weekly plans | `{wake, sleep, wmin, wmax, protein, budget, ex:{mon:[..]..sun:[..]}, fd:{mon:[..]..sun:[..]}}` |
-| `college` | Semesters, subjects, plan | `{sems:[{id,name}], subs:[{id,sem,n,bl,ch:[{id,t,d}],as:[{id,t,d}],fl:[{id,n,k,a}]}], plan:{mon:[{s,h}]..}}` |
-| `self` | Self topics: schedule, resources, notes | `{topics:[{id,n,sch:{mon:{h,at}..},res:[{id,t,u}],notes:[{id,t,d,dt}]}]}` |
-| `days-2026` (one per year) | Daily records | `{days:{"2026-10-08":{done:{key:true}, water, protein, wake, sdone:{subjectId:true}}}}` |
+| `health` | Targets (with the date they start) | `{wake, sleep, wmin, wmax, protein, budget, tv:[{from,wake,sleep,wmin,wmax,protein}], mig:1}`. Old weekday fields `ex`/`fd` stay but are no longer used. |
+| `plans-2026` (one per year) | **Every plan, per date** | `{days:{"2026-10-08":{ex:[..], fd:[..], td:[..], study:[{s,h,nm}], self:[{id,n,h,at}]}}}` |
+| `college` | Semesters, subjects, plan | `{sems:[{id,name}], subs:[{id,sem,n,bl,ch:[{id,t,d}],as:[{id,t,d}],fl:[{id,n,k,a}]}]}` (old weekday `plan` stays but is no longer used) |
+| `self` | Self topics: resources, notes | `{topics:[{id,n,res:[{id,t,u}],notes:[{id,t,d,dt}]}]}` (old weekday `sch` stays but is no longer used) |
+| `books` | Books, dated reading log, reading goals | `{list:[{id,t,pages,dl}], log:{"2026-10-08":{bookId:pagesReadThatDay}}, goal:{d,m,y}}` |
+| `days-2026` (one per year) | Daily records | `{days:{"2026-10-08":{done:{key:true}, water, protein, wake, sdone:{subjectId:true}, pdone:{topicId:true}, fz:{...}}}}` |
 | `money-2026-10` (one per month) | Money entries | `{items:[{id,d,t,a,c,n}]}` (date, in/out, amount, category, note) |
 
 Short field names in `college`: `n` name, `bl` backlog state (0 regular, 1 pending, 2 cleared), `ch` chapters, `as` assignments, `t` title, `d` done, `fl` files (`k` is `syl` or `pyq`, `a` is the file id), `s` subject id, `h` hours.
 
-In `self`: `n` topic name, `sch` schedule per weekday (`h` hours, `at` start time `HH:MM`), `res` resources (`t` title, `u` optional link), `notes` things you missed (`d` covered, `dt` date added). Daily ticks for Self topics are saved in the day record as `pdone`.
+In `self`: `n` topic name, `res` resources (`t` title, `u` optional link), `notes` things you missed (`d` covered, `dt` date added). Daily ticks for Self topics are saved in the day record as `pdone`, and ticks for date tasks as `tdone`. What is planned for a date lives in `plans-YYYY` (`ex` exercise lines, `fd` food lines, `td` task lines, `study` and `self` rows with hours).
+
+`fz` is the **frozen plan** of a past day (see section 5b). In `books`: `t` title, `pages` total pages, `dl` optional finish-by date, `log` pages read per date per book, `goal` pages per day (`d`), month (`m`), year (`y`).
 
 Daily checklist keys in `done`: `wake`, `sleep`, `e:<exercise text>`, `f:<food text>`. Note: if you rename an exercise or meal in the plan, old days no longer match it. That is expected.
 
@@ -75,11 +79,13 @@ Inside the `<script>` tag, in this order:
 | Helpers | `$`, `esc`, `iso`, `parse`, `addD`, `shiftMon`, `fmt`, `uid0` | Dates, escaping text, currency, random ids |
 | State | `S.s` (health), `S.c` (college), `S.days`, `S.money` | Data in memory. `cur` is the selected date, `tab` the open screen. |
 | Storage | `init`, `load`, `save`, `flush`, `banner`, `ensureYear`, `ensureMon`, `saveDays`, `saveMoney`, `saveSet`, `saveCol` | Talks to the server. Saves are sent after 400 ms and retried every 5 s if the server is off. |
-| Health logic | `DEF`, `dk`, `isRest`, `items`, `pct`, `streak`, `xp` | Default settings, today's checklist, score, streak, XP and level |
-| Health screens | `vHealth`, `vEdit`, `meter`, `chk`, `capture` | Health page and the plan editor |
-| Home | `vHome`, `colTile` | Level bar and the three boxes |
-| College | `CDEF`, `sub`, `sylP`, `asgLeft`, `planSum`, `vCollege`, `cMain`, `cSem`, `cSub`, `cPlan`, `colClick`, `colChange` | Semesters, subjects, syllabus, assignments, backlog, study plan, PDF upload |
-| Self | `SDEF`, `tp`, `hrsWeek`, `selfPlan`, `selfTile`, `vSelf`, `sMain`, `sTop`, `selfClick`, `selfChange` | Topics, weekly schedule, resources, missed-notes, today's growth ticks, button to Money |
+| Health logic | `DEF`, `dk`, `isRest`, `items`, `pct`, `streak`, `xp` | Today's checklist, score, streak, XP and level (all read the plan of the date through `plan(date)`) |
+| Health screens | `vHealth`, `meter`, `chk` | Health page. Its Plan buttons open the Plan page for that date. |
+| Home and status box | `vHome`, `statusBox`, `dstat`, `lvCheck`, `plannedAhead`, `colTile`, `selfTile` | Level box (rank, XP, five stats from your last 7 days, radar chart, level-up banner), the four boxes, today's date tasks |
+| Plan (by date) | `dlabel`, `ensurePlans`, `savePlans`, `hasP`, `dp`, `tg`, `plan`, `setP`, `copyPlan`, `purgeFuture`, `migrateWeekly`, `vPlan`, `planClick`, `planChange`, `legacyPlan`, `freezeSync` | Calendar, per-date editor, copy to range, targets that start from a date. `legacyPlan`, `freezeSync` and `migrateWeekly` only run once to convert old weekday plans. |
+| College | `CDEF`, `sub`, `sylP`, `asgLeft`, `planSum`, `vCollege`, `cMain`, `cSem`, `cSub`, `colClick`, `colChange` | Semesters, subjects, syllabus, assignments, backlog, PDF upload (study plans are made on the Plan page) |
+| Self | `SDEF`, `tp`, `selfDates`, `planDays`, `selfPlan`, `selfTile`, `vSelf`, `sMain`, `sTop`, `selfClick`, `selfChange` | Topics, planned dates, resources, missed-notes, today's growth ticks, button to Money |
+| Books (inside the Book reading topic) | `BDEF`, `saveBooks`, `isBook`, `pgSum`, `pgDay`, `bookRead`, `vBooks` | Books with pages, pages read per date, finish-by date, day/month/year goals and history |
 | Stats | `vStats` | Week, month and year views |
 | Money | `vMoney`, `sum` | Income, spending, budget |
 | App core | `render`, the `click` and `change` listeners, the boot function at the bottom | Draws the current screen and handles every button |
@@ -95,6 +101,22 @@ Buttons use `data-act="name"`. The click listener calls the matching code. To ad
 5. **Copy `data/` before big changes.** It is just a folder.
 6. **Do not delete `data/`** when updating. Replace only `server.py` and `static/index.html`.
 7. If you must change how a document is shaped, write a small conversion that runs on load and keeps the old fields until you are sure.
+8. Anything that depends on a plan or target must read it through `plan(date)` (section 5b), so every date keeps its own plan.
+
+## 5b. Plans are per date, not per weekday
+
+There are no weekly templates any more. Every plan belongs to a calendar date, so editing one date never changes another date or any past day.
+
+- Plans are saved in `plans-YYYY`. Edit them on the **Plan** page: pick a date on the calendar, then change exercise, food, tasks, study rows and Self rows.
+- **Copy to range** and **Next 7 days** copy a date's plan to other dates (this writes separate dated copies).
+- **Targets** (wake, sleep, water, protein) start from a date you choose and stay in force until the next change. Dates before that keep their old targets (`tg(date)`).
+- `plan(date)` is the one function that returns everything planned for a date. Scores, checklists, study hours and Self hours all read from it.
+- Deleting a subject or topic removes it from today and future dates only. Past dates keep it.
+- First run of this version: old weekday plans are converted into dated plans from today to the end of the year, and past days are saved with the plan they had. This happens once (`health.mig`). Use Copy to range to plan further ahead.
+
+**Rule for new features:** if a feature compares progress against a plan or target, read it through `plan(date)` and add the needed field to the plan object in `plan()` and in the Plan page. Never use old weekday fields.
+
+Reading progress works differently: pages are saved per date in `books.log`, so it never depends on a plan.
 
 ## 6. Adding a feature: how the Self section was added (repeat these steps for the next feature)
 

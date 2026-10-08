@@ -56,10 +56,27 @@ h3,h2{font-weight:700;letter-spacing:.18em}
 .btn{display:inline-block;background:rgba(20,45,105,.6);border:1px solid var(--bd);padding:8px 12px;cursor:pointer;margin-top:6px}
 select{min-width:0}a{text-decoration:none}
 nav button{font-size:13px;padding:10px 2px}
+.tiles{grid-template-columns:repeat(4,1fr)!important;gap:6px}
+.tile{padding:8px 3px}.tile h2{font-size:10px;letter-spacing:.08em}.tile .pc{font-size:17px}.tile small{font-size:10px}
+nav button{font-size:11px;padding:10px 0;letter-spacing:0}
+.sys{overflow:hidden}
+.sysrow{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}.sysl{flex:1;min-width:150px}
+.rank{display:inline-block;font-size:34px;font-weight:800;line-height:1.1;border:2px solid var(--ok);padding:0 12px;color:var(--ok);text-shadow:0 0 14px #38d6ff;box-shadow:0 0 14px rgba(56,214,255,.5),inset 0 0 12px rgba(56,214,255,.25);animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 0 26px rgba(56,214,255,.9),inset 0 0 16px rgba(56,214,255,.4)}}
+.xpb i{position:relative;overflow:hidden}.xpb i::after{content:"";position:absolute;top:0;bottom:0;width:40%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.7),transparent);animation:shine 2.2s linear infinite}
+@keyframes shine{from{left:-40%}to{left:100%}}
+.stats{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;margin-top:8px;font-size:14px}.stats span{color:var(--mu);letter-spacing:.12em}
+.radar{filter:drop-shadow(0 0 6px rgba(56,214,255,.6))}
+#lvup{position:fixed;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;background:rgba(3,8,24,.88);z-index:20;font-size:38px;letter-spacing:.2em;color:var(--ok);text-shadow:0 0 24px #38d6ff;text-align:center}
+#lvup.on{display:flex}
+.cal button{aspect-ratio:1;padding:0;font-size:13px;background:rgba(80,130,230,.15);border:1px solid transparent}
+.cal button.has{background:rgba(59,130,255,.5);font-weight:700}.cal button.tod{text-decoration:underline}
+.cal button.sel{border-color:var(--ok);box-shadow:0 0 10px var(--ok)}
 </style></head>
 <body>
 <main id="v"><p class="mu">Loading…</p></main>
 <nav id="nav"></nav>
+<div id="lvup"></div>
 <div id="off" style="display:none;position:fixed;left:0;right:0;top:0;background:#7a1730;color:#fff;text-align:center;padding:4px;font-size:13px;z-index:9">Server offline. Changes will save when it is back.</div>
 <script>
 const $=s=>document.querySelector(s);
@@ -72,10 +89,10 @@ const fmt=n=>'₹'+Math.round(n).toLocaleString('en-IN');
 const uid0=()=>Math.random().toString(36).slice(2,8);
 const DAYS=['sun','mon','tue','wed','thu','fri','sat'],ORDER=['mon','tue','wed','thu','fri','sat','sun'],DN={sun:'Sunday',mon:'Monday',tue:'Tuesday',wed:'Wednesday',thu:'Thursday',fri:'Friday',sat:'Saturday'};
 let cur=iso(new Date()),tab='home',rng='week',mon=cur.slice(0,7),store=null,editing=false,editDay='mon';
-const S={s:null,days:{},money:{}};
+const S={s:null,days:{},money:{},p:{}};
 const DEF=()=>{const ex={},fd={};DAYS.forEach(k=>{ex[k]=k=='sun'?['Rest']:['Warm-up','Workout','Stretch'];fd[k]=['Breakfast','Lunch','Snack','Dinner']});return{wake:'05:30',sleep:'22:00',wmin:2,wmax:3,protein:100,budget:0,ex,fd}};
 const dk=d=>DAYS[parse(d).getDay()];
-const isRest=l=>!l.length||/^rest/i.test(l[0]);
+const isRest=l=>l.length>0&&/^rest/i.test(l[0]);
 const tm=t=>{const[h,m]=t.split(':').map(Number);return(h%12||12)+':'+String(m).padStart(2,'0')+(h<12?' AM':' PM')};
 const lines=v=>v.split('\n').map(x=>x.trim()).filter(Boolean);
 
@@ -94,41 +111,55 @@ const saveDays=y=>save('days-'+y,{days:S.days[y]}),saveMoney=m=>save('money-'+m,
 
 const day=d=>(S.days[d.slice(0,4)]||{})[d]||{};
 function setDay(d,p){const y=d.slice(0,4);S.days[y]=S.days[y]||{};const o=S.days[y][d]||{done:{}};if(!o.done)o.done={};S.days[y][d]=Object.assign(o,p);saveDays(y)}
-function items(d){const s=S.s,k=dk(d),e=isRest(s.ex[k])?[]:s.ex[k];return[{k:'wake'},{k:'sleep'},...e.map(t=>({k:'e:'+t})),...s.fd[k].map(t=>({k:'f:'+t}))]}
-function pct(d){const x=day(d),dn=x.done||{},it=items(d);return Math.round(100*(it.filter(i=>dn[i.k]).length+((x.water||0)>=S.s.wmin?1:0))/(it.length+1))}
+function legacyPlan(d){const s=S.s,k=dk(d),ex=s.ex[k]||[],rest=!ex.length||/^rest/i.test(ex[0]);
+  return{wake:s.wake,sleep:s.sleep,wmin:s.wmin,wmax:s.wmax,protein:s.protein,rest,ex:rest?[]:ex.slice(),fd:(s.fd[k]||[]).slice(),
+    study:((S.c.plan||{})[k]||[]).map(i=>({s:i.s,h:i.h,nm:(sub(i.s)||{}).n||i.nm||''})),
+    self:S.f.topics.filter(x=>((x.sch||{})[k]||{}).h>0).map(x=>({id:x.id,n:x.n,h:x.sch[k].h,at:x.sch[k].at||''}))}}
+
+function freezeSync(){const t=iso(new Date());for(const yy in S.days){const all=S.days[yy];let ch=false;for(const d in all)if(d<t&&!all[d].fz){all[d].fz=legacyPlan(d);ch=true}if(ch)saveDays(yy)}}
+function items(d){const P=plan(d);return[{k:'wake'},{k:'sleep'},...P.ex.map(t=>({k:'e:'+t})),...P.fd.map(t=>({k:'f:'+t}))]}
+function pct(d){const x=day(d),dn=x.done||{},it=items(d),P=plan(d);return Math.round(100*(it.filter(i=>dn[i.k]).length+((x.water||0)>=P.wmin?1:0))/(it.length+1))}
 function streak(){let d=cur,n=0;if(pct(d)<80)d=addD(d,-1);while(n<400&&pct(d)>=80){n++;d=addD(d,-1)}return n}
-function xp(){let x=0;for(const y in S.days)for(const d in S.days[y]){const o=S.days[y][d];x+=(Object.values(o.done||{}).filter(Boolean).length+Object.values(o.sdone||{}).filter(Boolean).length+Object.values(o.pdone||{}).filter(Boolean).length)*10;if((o.water||0)>=S.s.wmin)x+=10}return x}
+function xp(){let x=0;for(const y in S.days)for(const d in S.days[y]){const o=S.days[y][d];x+=(Object.values(o.done||{}).filter(Boolean).length+Object.values(o.sdone||{}).filter(Boolean).length+Object.values(o.pdone||{}).filter(Boolean).length)*10;if((o.water||0)>=plan(d).wmin)x+=10}return x}
 const sum=(it,t)=>it.filter(i=>i.t==t).reduce((a,i)=>a+i.a,0);
 
 const chk=(k,l,dn)=>`<label class="row"><input type="checkbox" data-act="chk" data-k="${esc(k)}" ${dn[k]?'checked':''}><span class="${dn[k]?'dn':''}">${esc(l)}</span></label>`;
 function meter(k,l,u,steps,v,goal,min){const p=Math.min(100,Math.round(100*v/goal));
   return `<div class="row" style="border:0;padding-bottom:0"><span>${l}</span><span class="mu">${+v.toFixed(2)} / ${goal} ${u}</span></div><div class="bar"><i style="width:${p}%"></i>${min?`<b style="left:${100*min/goal}%"></b>`:''}</div><div class="st">${steps.map(s=>`<button data-act="step" data-k="${k}" data-s="${s}">${s>0?'+':'−'} ${Math.abs(s)}</button>`).join('')}</div>`}
 
-function vHome(){const s=S.s,p=pct(cur),x=day(cur),X=xp(),lv=Math.floor(X/200)+1,bal=sum(S.money[cur.slice(0,7)]||[],'in')-sum(S.money[cur.slice(0,7)]||[],'out');
-  return `<div class="card"><small>SYSTEM · PLAYER STATUS</small><div class="lv">LEVEL ${lv}</div><div class="bar"><i style="width:${(X%200)/2}%"></i></div><small>${X%200} / 200 XP · ${streak()} day streak</small></div>
-  <div class="tiles">
-  <button class="tile" data-act="go" data-t="health"><div class="ic">❤️</div><h2>Health</h2><div class="pc">${p}%</div><small>${+(x.water||0).toFixed(1)}/${s.wmax} L</small></button>
+function dstat(d){const x=day(d),dn=x.done||{},P=plan(d),fr=(a,pre)=>a.length?a.filter(t=>dn[pre+t]).length/a.length:null,foods=fr(P.fd,'f:'),w=(x.water||0)>=P.wmin?1:0,sp=planSum(d),se=selfPlan(d);
+  return{str:P.rest?null:fr(P.ex,'e:'),vit:foods==null?w:(foods+w)/2,agi:(['wake','sleep'].filter(k=>dn[k]).length)/2,int:sp.t?sp.d/sp.t:null,sen:se.t?se.d/se.t:null}}
+function statusBox(){const X=xp(),lv=Math.floor(X/200)+1,ps=[...Array(7)].map((_,i)=>dstat(addD(cur,i-6)));
+  const av=k=>{const v=ps.map(o=>o[k]).filter(z=>z!=null);return v.length?Math.round(100*v.reduce((a,b)=>a+b,0)/v.length):0};
+  const st=[['STR',av('str')],['VIT',av('vit')],['AGI',av('agi')],['INT',av('int')],['SEN',av('sen')]],rank=lv>=30?'S':lv>=20?'A':lv>=15?'B':lv>=10?'C':lv>=5?'D':'E';
+  const R=62,C=80,pt=(i,v)=>{const a=(-90+i*72)*Math.PI/180;return[(C+R*v*Math.cos(a)).toFixed(1),(C+R*v*Math.sin(a)).toFixed(1)]};
+  const poly=st.map((q,i)=>pt(i,Math.max(.06,q[1]/100)).join(',')).join(' '),grid=[.33,.66,1].map(g=>`<polygon points="${st.map((_,i)=>pt(i,g).join(',')).join(' ')}" fill="none" stroke="rgba(80,150,255,.3)"/>`).join(''),
+    ax=st.map((q,i)=>{const[a,b]=pt(i,1.3);return `<text x="${a}" y="${b}" fill="#7fb4ff" font-size="10" text-anchor="middle" dominant-baseline="middle">${q[0]}</text>`}).join('');
+  return `<div class="card sys"><small>SYSTEM · PLAYER STATUS</small><div class="sysrow"><div class="sysl"><div class="rank">${rank}</div> <small style="display:inline">RANK</small><div class="lv">LEVEL ${lv}</div><div class="bar xpb"><i style="width:${(X%200)/2}%"></i></div><small>${X%200} / 200 XP · ${streak()} day streak</small>
+  <div class="stats">${st.map(q=>`<span>${q[0]}</span><b>${q[1]}</b>`).join('')}</div></div>
+  <svg viewBox="-14 -14 188 188" width="150" height="150" class="radar">${grid}${ax}<polygon points="${poly}" fill="rgba(56,214,255,.28)" stroke="#38d6ff" stroke-width="1.5"/></svg></div><small>Stats = your last 7 days up to this date</small></div>`}
+function lvCheck(){const lv=Math.floor(xp()/200)+1;let o=0;try{o=+localStorage.getItem('lt:lv')||0;if(lv>o)localStorage.setItem('lt:lv',lv)}catch(e){}
+  if(o&&lv>o){const e=$('#lvup');e.innerHTML='LEVEL UP!<small style="font-size:16px;letter-spacing:.2em">LEVEL '+lv+'</small>';e.classList.add('on');setTimeout(()=>e.classList.remove('on'),2800)}}
+function plannedAhead(){const t=iso(new Date());let n=0;for(const y in S.p)for(const d in S.p[y])if(d>=t&&hasP(S.p[y][d]))n++;return n}
+function vHome(){const p=pct(cur),x=day(cur),pl=plan(cur),td=pl.td,tn=x.tdone||{};
+  return statusBox()+`<div class="tiles">
+  <button class="tile" data-act="go" data-t="health"><div class="ic">❤️</div><h2>Health</h2><div class="pc">${p}%</div><small>${+(x.water||0).toFixed(1)}/${pl.wmax} L</small></button>
   <button class="tile" data-act="go" data-t="college">${colTile()}</button>
-  <button class="tile" data-act="go" data-t="self">${selfTile()}</button></div>`}
+  <button class="tile" data-act="go" data-t="self">${selfTile()}</button>
+  <button class="tile" data-act="go" data-t="plan"><div class="ic">🗓️</div><h2>Plan</h2><div class="pc">${plannedAhead()}</div><small>days ahead</small></button></div>`
+  +(td.length?`<div class="card" style="margin-top:12px"><h3>Tasks · ${dlabel(cur)}</h3>${td.map(t=>`<label class="row"><input type="checkbox" data-act="tkd" data-t="${esc(t)}" ${tn[t]?'checked':''}><span class="${tn[t]?'dn':''}">${esc(t)}</span></label>`).join('')}</div>`:'')}
 
-function vHealth(){if(editing)return vEdit();const x=day(cur),s=S.s,k=dk(cur),dn=x.done||{},p=pct(cur),rest=isRest(s.ex[k]);
-  return `<div class="card"><small>HEALTH · DAILY QUEST</small><div class="big">${p}%</div><div class="bar"><i style="width:${p}%"></i></div><small>${DN[k]}</small></div>
+function vHealth(){const x=day(cur),s=plan(cur),k=dk(cur),dn=x.done||{},p=pct(cur),rest=s.rest;
+  return `<div class="card"><small>HEALTH · DAILY QUEST</small><div class="big">${p}%</div><div class="bar"><i style="width:${p}%"></i></div><small>${dlabel(cur)}</small></div>
   <div class="card"><h3>Routine</h3>${chk('wake','Wake up at '+tm(s.wake),dn)}<div class="row"><span class="mu">Actual wake-up time</span><input type="time" data-act="wake" value="${x.wake||''}"></div>${chk('sleep','Sleep by '+tm(s.sleep),dn)}</div>
   <div class="card"><h3>Water · ${s.wmin} to ${s.wmax} L</h3>${meter('water','Water','L',[-0.25,0.25,0.5],x.water||0,s.wmax,s.wmin)}</div>
-  <div class="card"><div class="row" style="border:0;padding:0 0 4px"><h3 style="margin:0">Exercise · ${DN[k]}</h3><button data-act="edit" style="padding:4px 10px">Edit</button></div>${rest?'<p class="mu" style="margin:0">Rest day. Recover and stretch lightly.</p>':s.ex[k].map(t=>chk('e:'+t,t,dn)).join('')}</div>
-  <div class="card"><h3>Food · ${DN[k]}</h3>${s.fd[k].map(t=>chk('f:'+t,t,dn)).join('')||'<p class="mu">No meals planned.</p>'}<div style="height:8px"></div>${meter('protein','Protein','g',[-10,10,25],x.protein||0,s.protein)}</div>
-  <button class="pri" style="width:100%" data-act="edit">Edit plans</button>`}
+  <div class="card"><div class="row" style="border:0;padding:0 0 4px"><h3 style="margin:0">Exercise · ${dlabel(cur)}</h3><button data-act="pedit" data-d="${cur}" style="padding:4px 10px">Plan</button></div>${rest?'<p class="mu" style="margin:0">Rest day. Recover and stretch lightly.</p>':(s.ex.map(t=>chk('e:'+t,t,dn)).join('')||'<p class="mu" style="margin:0">Nothing planned for this date.</p>')}</div>
+  <div class="card"><h3>Food · ${dlabel(cur)}</h3>${s.fd.map(t=>chk('f:'+t,t,dn)).join('')||'<p class="mu">No meals planned.</p>'}<div style="height:8px"></div>${meter('protein','Protein','g',[-10,10,25],x.protein||0,s.protein)}</div>
+  <button class="pri" style="width:100%" data-act="pedit" data-d="${cur}">Plan this date</button>`}
 
-function vEdit(){const s=S.s,inp=(l,kk,t,v)=>`<div class="row"><span>${l}</span><input data-act="cfg" data-k="${kk}" type="${t}" ${t=='number'?'step="0.25"':''} value="${v}" style="width:110px"></div>`,
-  blk=key=>ORDER.map(d=>`<small style="margin-top:6px">${DN[d]}</small><textarea id="${key}-${d}" style="min-height:${key=='ex'?84:70}px">${esc(s[key][d].join('\n'))}</textarea>`).join('');
-  return `<div class="card"><h3>Exercise plan</h3><small>One exercise per line. Write Rest for a rest day.</small>${blk('ex')}</div>
-  <div class="card"><h3>Food plan</h3><small>One item per line.</small>${blk('fd')}</div>
-  <div class="card"><h3>Routine targets</h3>${inp('Wake up','wake','time',s.wake)}${inp('Sleep','sleep','time',s.sleep)}${inp('Water min (L)','wmin','number',s.wmin)}${inp('Water max (L)','wmax','number',s.wmax)}${inp('Protein (g)','protein','number',s.protein)}</div>
-  <button class="pri" style="width:100%" data-act="saveplan">Save &amp; close</button>`}
-
-function vStats(){let h=`<div class="seg">${['week','month','year'].map(r=>`<button data-act="rng" data-r="${r}" class="${rng==r?'on':''}">${r}</button>`).join('')}</div>`;
+function vStats(){let h=`<div class="seg">${['week','month','year'].map(r=>`<button data-act="rng" data-r="${r}" class="${rng==r?'on':''}">${({week:'7 days',month:'month',year:'year'})[r]}</button>`).join('')}</div>`;
   if(rng=='week'){const ds=[...Array(7)].map((_,i)=>addD(cur,i-6)),a=k=>Math.round(ds.reduce((t,d)=>t+(day(d)[k]||0),0)/7*10)/10;
-    h+=`<div class="card"><h3>Last 7 days</h3><div class="cols">${ds.map(d=>`<div class="col"><div class="cb"><i style="height:${pct(d)}%"></i></div><small>${parse(d).toLocaleDateString('en',{weekday:'short'})}</small><small>${pct(d)}%</small></div>`).join('')}</div></div>
+    h+=`<div class="card"><h3>Last 7 days</h3><div class="cols">${ds.map(d=>`<div class="col"><div class="cb"><i style="height:${pct(d)}%"></i></div><small>${parse(d).toLocaleDateString('en',{day:'numeric',month:'short'})}</small><small>${pct(d)}%</small></div>`).join('')}</div></div>
     <div class="card grid"><div><b>${Math.round(ds.reduce((t,d)=>t+pct(d),0)/7)}%</b><small>avg score</small></div><div><b>${a('water')}</b><small>avg water L</small></div><div><b>${a('protein')}</b><small>avg protein g</small></div><div><b>${streak()}</b><small>day streak</small></div></div>`;
   }else if(rng=='month'){const m=cur.slice(0,7),f=parse(m+'-01'),n=new Date(f.getFullYear(),f.getMonth()+1,0).getDate(),off=(f.getDay()+6)%7;let c='',t=0;
     ['M','T','W','T','F','S','S'].forEach(w=>c+=`<div class="h">${w}</div>`);for(let i=0;i<off;i++)c+='<div class="h"></div>';
@@ -162,14 +193,14 @@ const arm=k=>{if(armed==k){armed=null;return true}armed=k;return false};
 const sylP=u=>u.ch.length?Math.round(100*u.ch.filter(c=>c.d).length/u.ch.length):0;
 const asgLeft=u=>u.as.filter(a=>!a.d).length;
 const BL=['Regular','Backlog pending','Backlog cleared'];
-function planSum(d){const pl=S.c.plan[dk(d)]||[],sd=day(d).sdone||{};return{t:pl.reduce((a,i)=>a+i.h,0),d:pl.filter(i=>sd[i.s]).reduce((a,i)=>a+i.h,0),pl,sd}}
+function planSum(d){const pl=plan(d).study,sd=day(d).sdone||{};return{t:pl.reduce((a,i)=>a+i.h,0),d:pl.filter(i=>sd[i.s]).reduce((a,i)=>a+i.h,0),pl,sd}}
 function colTile(){const p=planSum(cur);return `<div class="ic">📚</div><h2>College</h2><div class="pc">${p.t?p.d+'/'+p.t+'h':'—'}</div><small>${p.t?'study today':'set plan'}</small>`}
 const hdr=(v,t)=>`<div class="hd"><button data-act="cgo" data-v="${v}">‹ Back</button><b>${t}</b><span style="width:60px"></span></div>`;
-function vCollege(){return({main:cMain,sem:cSem,sub:cSub,plan:cPlan}[cv]||cMain)()}
+function vCollege(){return({main:cMain,sem:cSem,sub:cSub}[cv]||cMain)()}
 function cMain(){const c=S.c,p=planSum(cur),left=c.subs.filter(u=>u.bl!=2&&asgLeft(u)>0),bls=c.subs.filter(u=>u.bl==1);
   return `<div class="card"><small>COLLEGE · STUDY QUEST</small><div class="big">${p.d}/${p.t}h</div><div class="bar"><i style="width:${p.t?Math.round(100*p.d/p.t):0}%"></i></div>
-  ${p.pl.map(i=>{const u=sub(i.s);return u?`<label class="row"><input type="checkbox" data-act="sd" data-s="${u.id}" ${p.sd[i.s]?'checked':''}><span class="${p.sd[i.s]?'dn':''}">${esc(u.n)} · ${i.h}h</span></label>`:''}).join('')||'<p class="mu" style="margin:0">No study planned today.</p>'}
-  <button data-act="cgo" data-v="plan" style="width:100%;margin-top:8px">Edit weekly study plan</button></div>
+  ${p.pl.map(i=>{return `<label class="row"><input type="checkbox" data-act="sd" data-s="${i.s}" ${p.sd[i.s]?'checked':''}><span class="${p.sd[i.s]?'dn':''}">${esc(i.nm||'Deleted subject')} · ${i.h}h</span></label>`}).join('')||'<p class="mu" style="margin:0">No study planned today.</p>'}
+  <button data-act="pedit" data-d="${cur}" style="width:100%;margin-top:8px">Plan study for this date</button></div>
   <div class="card"><h3>Assignments left</h3>${left.map(u=>`<div class="row"><span>${esc(u.n)}<small>${esc(semName(u.sem))}</small></span><button data-act="osub" data-id="${u.id}">${asgLeft(u)} left</button></div>`).join('')||'<p class="mu" style="margin:0">Nothing pending.</p>'}</div>
   <div class="card"><h3>Backlogs to pass</h3>${bls.map(u=>`<div class="row"><span>${esc(u.n)}<small>${esc(semName(u.sem))} · syllabus ${sylP(u)}%</small></span><button data-act="osub" data-id="${u.id}">Open</button></div>`).join('')||'<p class="mu" style="margin:0">No backlogs. Mark a subject as Backlog pending inside it.</p>'}</div>
   <div class="card"><h3>Semesters</h3>${c.sems.map(m=>`<div class="row"><button data-act="osem" data-id="${m.id}" style="flex:1;text-align:left">${esc(m.name)}</button><small>${c.subs.filter(u=>u.sem==m.id).length} subjects</small></div>`).join('')}<div class="row"><input id="ns" placeholder="Add semester (e.g. Sem 5)" style="flex:1"><button class="pri" data-act="addsem">Add</button></div></div>`}
@@ -187,10 +218,7 @@ function cSub(){const u=sub(selSub);if(!u){cv='main';return cMain()}
   <div class="card"><h3>Syllabus PDFs</h3>${fl('syl')}${up('syl','syllabus PDF')}</div>
   <div class="card"><h3>PYQ papers</h3>${fl('pyq')}${up('pyq','PYQ PDF')}${err?`<small class="out">${err}</small>`:''}</div>
   <button data-act="delsub" style="width:100%">${armed=='sub'+u.id?'Tap again to delete this subject':'Delete subject'}</button>`}
-function cPlan(){const c=S.c;
-  return hdr('main','Weekly study plan')+(c.subs.length?'':'<p class="mu">Add a semester and subjects first, then plan them here.</p>')+ORDER.map(d=>{const pl=c.plan[d]||[];
-    return `<div class="card"><h3>${DN[d]} · ${pl.reduce((a,i)=>a+i.h,0)}h</h3>${pl.map((i,n)=>`<div class="row"><select data-act="pset" data-d="${d}" data-i="${n}" data-f="s" style="flex:1">${c.subs.map(u=>`<option value="${u.id}" ${u.id==i.s?'selected':''}>${esc(u.n)}</option>`).join('')}</select><input type="number" step="0.5" min="0" value="${i.h}" data-act="pset" data-d="${d}" data-i="${n}" data-f="h" style="width:70px"><button data-act="pdel" data-d="${d}" data-i="${n}">✕</button></div>`).join('')}<button data-act="padd" data-d="${d}" style="width:100%;margin-top:6px">+ Add subject</button></div>`}).join('')}
-function colClick(b,a){const c=S.c,d=b.dataset;if(!/^del(f|sub|sem|tp)$/.test(a))armed=null;
+function colClick(b,a){const c=S.c,d=b.dataset;if(!/^del(f|sub|sem|tp|bk)$/.test(a))armed=null;
   if(a=='cgo'){cv=d.v;err=''}
   else if(a=='osub'){const u=sub(d.id);selSub=u.id;selSem=u.sem;cv='sub';err=''}
   else if(a=='osem'){selSem=d.id;cv='sem'}
@@ -199,17 +227,14 @@ function colClick(b,a){const c=S.c,d=b.dataset;if(!/^del(f|sub|sem|tp)$/.test(a)
   else if(a=='add'){const u=sub(selSub),t=$('#'+d.i).value.trim();if(t){u[d.w].push({id:uid0(),t,d:false});saveCol()}}
   else if(a=='del'){const u=sub(selSub);u[d.w]=u[d.w].filter(x=>x.id!=d.id);saveCol()}
   else if(a=='bl'){sub(selSub).bl=+d.v;saveCol()}
-  else if(a=='padd'){if(c.subs.length){(c.plan[d.d]=c.plan[d.d]||[]).push({s:c.subs[0].id,h:1});saveCol()}}
-  else if(a=='pdel'){c.plan[d.d].splice(+d.i,1);saveCol()}
   else if(a=='delf'){if(arm('f'+d.id)){const u=sub(selSub),f=u.fl.find(x=>x.id==d.id);u.fl=u.fl.filter(x=>x.id!=d.id);saveCol();if(A&&f)A.delete(f.a).catch(()=>{})}}
-  else if(a=='delsub'){if(arm('sub'+selSub)){const u=sub(selSub);c.subs=c.subs.filter(x=>x.id!=u.id);Object.keys(c.plan).forEach(k=>c.plan[k]=c.plan[k].filter(i=>i.s!=u.id));saveCol();if(A)u.fl.forEach(f=>A.delete(f.a).catch(()=>{}));cv='sem'}}
-  else if(a=='delsem'){if(arm('sem'+selSem)){const us=c.subs.filter(u=>u.sem==selSem),ids=us.map(u=>u.id);if(A)us.forEach(u=>u.fl.forEach(f=>A.delete(f.a).catch(()=>{})));c.subs=c.subs.filter(u=>u.sem!=selSem);c.sems=c.sems.filter(m=>m.id!=selSem);Object.keys(c.plan).forEach(k=>c.plan[k]=c.plan[k].filter(i=>!ids.includes(i.s)));saveCol();cv='main'}}
+  else if(a=='delsub'){if(arm('sub'+selSub)){const u=sub(selSub);c.subs=c.subs.filter(x=>x.id!=u.id);purgeFuture('study',u.id);saveCol();if(A)u.fl.forEach(f=>A.delete(f.a).catch(()=>{}));cv='sem'}}
+  else if(a=='delsem'){if(arm('sem'+selSem)){const us=c.subs.filter(u=>u.sem==selSem),ids=us.map(u=>u.id);if(A)us.forEach(u=>u.fl.forEach(f=>A.delete(f.a).catch(()=>{})));c.subs=c.subs.filter(u=>u.sem!=selSem);c.sems=c.sems.filter(m=>m.id!=selSem);ids.forEach(id=>purgeFuture('study',id));saveCol();cv='main'}}
   else return false;
   return true}
 function colChange(t,a){const d=t.dataset;
   if(a=='sd'){const sd=Object.assign({},day(cur).sdone||{});sd[d.s]=t.checked;setDay(cur,{sdone:sd})}
   else if(a=='tg'){sub(selSub)[d.w].find(x=>x.id==d.id).d=t.checked;saveCol()}
-  else if(a=='pset'){const i=S.c.plan[d.d][+d.i];i[d.f]=d.f=='h'?Math.max(0,parseFloat(t.value)||0):t.value;saveCol()}
   else if(a=='upl'){const f=t.files[0],k=d.k;t.value='';if(!f||!A)return true;err='';busy=k;A.upload(f).then(r=>{sub(selSub).fl.push({id:uid0(),n:f.name,k,a:r.id});saveCol()}).catch(()=>{err='Upload failed. Use a PDF, PNG or JPG up to 50 MB.'}).finally(()=>{busy='';render()})}
   else return false;
   return true}
@@ -219,20 +244,21 @@ let sv='main',selTop=null;
 const SDEF=()=>({topics:[{id:'t1',n:'Book reading'},{id:'t2',n:'Coding'},{id:'t3',n:'Game dev (Unity)'},{id:'t4',n:'Android Studio'},{id:'t5',n:'Java, Python, C, C++ with DSA'}].map(x=>Object.assign(x,{sch:{},res:[],notes:[]}))});
 const saveSelf=()=>save('self',S.f);
 const tp=id=>S.f.topics.find(x=>x.id==id);
-const hrsWeek=x=>Object.values(x.sch||{}).reduce((a,v)=>a+(v.h||0),0);
-function selfPlan(d){const dn=day(d).pdone||{},k=dk(d),it=S.f.topics.filter(x=>((x.sch||{})[k]||{}).h>0).map(x=>({x,h:x.sch[k].h,at:x.sch[k].at||''})).sort((a,b)=>(a.at||'99').localeCompare(b.at||'99'));
-  return{it,dn,t:it.reduce((a,i)=>a+i.h,0),d:it.filter(i=>dn[i.x.id]).reduce((a,i)=>a+i.h,0)}}
+function selfDates(id){const t=iso(new Date()),r=[];for(const y in S.p)for(const d in S.p[y])if(d>=t){const i=(S.p[y][d].self||[]).find(z=>z.id==id);if(i)r.push([d,i])}return r.sort((a,b)=>a[0].localeCompare(b[0]))}
+const planDays=x=>selfDates(x.id).length;
+function selfPlan(d){const dn=day(d).pdone||{},it=plan(d).self.slice().sort((a,b)=>(a.at||'99').localeCompare(b.at||'99'));
+  return{it,dn,t:it.reduce((a,i)=>a+i.h,0),d:it.filter(i=>dn[i.id]).reduce((a,i)=>a+i.h,0)}}
 function selfTile(){const p=selfPlan(cur);return `<div class="ic">🧠</div><h2>Self</h2><div class="pc">${p.t?p.d+'/'+p.t+'h':'—'}</div><small>${p.t?'growth today':'set plan'}</small>`}
 function vSelf(){return(sv=='topic'?sTop:sMain)()}
 function sMain(){const f=S.f,p=selfPlan(cur);
   return `<div class="card"><small>SELF · GROWTH QUEST</small><div class="big">${p.d}/${p.t}h</div><div class="bar"><i style="width:${p.t?Math.round(100*p.d/p.t):0}%"></i></div>
-  ${p.it.map(i=>`<label class="row"><input type="checkbox" data-act="spd" data-id="${i.x.id}" ${p.dn[i.x.id]?'checked':''}><span class="${p.dn[i.x.id]?'dn':''}">${esc(i.x.n)} · ${i.h}h${i.at?' · '+tm(i.at):''}</span></label>`).join('')||'<p class="mu" style="margin:0">Nothing scheduled today.</p>'}</div>
+  ${p.it.map(i=>`<label class="row"><input type="checkbox" data-act="spd" data-id="${i.id}" ${p.dn[i.id]?'checked':''}><span class="${p.dn[i.id]?'dn':''}">${esc(i.n)} · ${i.h}h${i.at?' · '+tm(i.at):''}</span></label>`).join('')||'<p class="mu" style="margin:0">Nothing scheduled today.</p>'}</div>
   <button class="pri" style="width:100%;margin-bottom:12px" data-act="go" data-t="money">💰 Money tracker</button>
-  <div class="card"><h3>Topics</h3>${f.topics.map(x=>`<div class="row"><button data-act="otp" data-id="${x.id}" style="flex:1;text-align:left">${esc(x.n)}</button><small style="text-align:right">${hrsWeek(x)}h / week<br>${(x.notes||[]).filter(n=>!n.d).length} to cover</small></div>`).join('')}<div class="row"><input id="ntp" placeholder="Add topic" style="flex:1"><button class="pri" data-act="addtp">Add</button></div></div>`}
+  <div class="card"><h3>Topics</h3>${f.topics.map(x=>`<div class="row"><button data-act="otp" data-id="${x.id}" style="flex:1;text-align:left">${esc(x.n)}</button><small style="text-align:right">${planDays(x)} days planned<br>${(x.notes||[]).filter(n=>!n.d).length} to cover</small></div>`).join('')}<div class="row"><input id="ntp" placeholder="Add topic" style="flex:1"><button class="pri" data-act="addtp">Add</button></div></div>`}
 function sTop(){const x=tp(selTop);if(!x){sv='main';return sMain()}
   x.sch=x.sch||{};x.res=x.res||[];x.notes=x.notes||[];
   return `<div class="hd"><button data-act="sgo">‹ Back</button><b>${esc(x.n)}</b><span style="width:60px"></span></div>
-  <div class="card"><h3>Schedule · ${hrsWeek(x)}h / week</h3>${ORDER.map(d=>{const v=x.sch[d]||{};return `<div class="row"><span style="width:44px">${DN[d].slice(0,3)}</span><input type="number" step="0.5" min="0" placeholder="hrs" value="${v.h||''}" data-act="ssch" data-d="${d}" data-f="h" style="width:70px"><input type="time" value="${v.at||''}" data-act="ssch" data-d="${d}" data-f="at"></div>`}).join('')}<small>Hours per day (empty = off) and start time.</small></div>
+  ${isBook(x)?vBooks():''}<div class="card"><h3>Planned dates</h3>${selfDates(x.id).slice(0,10).map(([d,i])=>`<div class="row"><span>${dlabel(d)}</span><span class="mu">${i.h}h${i.at?' · '+tm(i.at):''}</span></div>`).join('')||'<p class="mu" style="margin:0">No dates planned yet.</p>'}<button data-act="pedit" data-d="${cur}" style="width:100%;margin-top:6px">Plan dates</button></div>
   <div class="card"><h3>Resources</h3>${x.res.map(r=>`<div class="row"><span style="flex:1;word-break:break-word">${r.u?`<a href="${esc(r.u)}" target="_blank" rel="noopener" style="color:var(--ok)">${esc(r.t)}</a>`:esc(r.t)}</span><button data-act="delres" data-id="${r.id}">✕</button></div>`).join('')||'<p class="mu" style="margin:0">No resources yet.</p>'}
   <div class="f" style="margin-top:8px"><input id="rt" placeholder="Name (book, course, video)"><input id="ru" placeholder="Link (optional)"><button class="pri w" data-act="addres">Add resource</button></div></div>
   <div class="card"><h3>Notes · what I missed</h3>${[...x.notes].reverse().map(n=>`<div class="row"><label style="display:flex;gap:10px;align-items:flex-start;flex:1"><input type="checkbox" data-act="ntg" data-id="${n.id}" ${n.d?'checked':''}><span class="${n.d?'dn':''}" style="white-space:pre-wrap">${esc(n.t)}<small>${n.dt||''}</small></span></label><button data-act="delnote" data-id="${n.id}">✕</button></div>`).join('')||'<p class="mu" style="margin:0">Nothing missed yet.</p>'}
@@ -246,24 +272,124 @@ function selfClick(b,a){const f=S.f,d=b.dataset;
   else if(a=='delres'){const x=tp(selTop);x.res=x.res.filter(r=>r.id!=d.id);saveSelf()}
   else if(a=='addnote'){const x=tp(selTop),t=$('#nn').value.trim();if(t){x.notes.push({id:uid0(),t,d:false,dt:iso(new Date())});saveSelf()}}
   else if(a=='delnote'){const x=tp(selTop);x.notes=x.notes.filter(n=>n.id!=d.id);saveSelf()}
-  else if(a=='deltp'){if(arm('tp'+selTop)){f.topics=f.topics.filter(x=>x.id!=selTop);saveSelf();sv='main'}}
+  else if(a=='addbk'){const t=$('#bt').value.trim(),n=parseInt($('#bp').value);if(t&&n>0){S.b.list.push({id:uid0(),t,pages:n,dl:$('#bd').value||''});saveBooks()}}
+  else if(a=='delbk'){if(arm('bk'+d.id)){S.b.list=S.b.list.filter(k=>k.id!=d.id);saveBooks()}}
+  else if(a=='bhist')bh=d.v;
+  else if(a=='bmnav')bm=shiftMon(bm,+d.s);
+  else if(a=='deltp'){if(arm('tp'+selTop)){purgeFuture('self',selTop);f.topics=f.topics.filter(x=>x.id!=selTop);saveSelf();sv='main'}}
   else return false;
   return true}
 function selfChange(t,a){const d=t.dataset;
-  if(a=='ssch'){const x=tp(selTop);x.sch=x.sch||{};const v=x.sch[d.d]=x.sch[d.d]||{h:0,at:''};if(d.f=='h')v.h=Math.max(0,parseFloat(t.value)||0);else v.at=t.value;saveSelf()}
-  else if(a=='spd'){const dn=Object.assign({},day(cur).pdone||{});dn[d.id]=t.checked;setDay(cur,{pdone:dn})}
+  if(a=='spd'){const dn=Object.assign({},day(cur).pdone||{});dn[d.id]=t.checked;setDay(cur,{pdone:dn})}
+  else if(a=='bpg'){const n=Math.max(0,parseInt(t.value)||0),l=S.b.log;l[cur]=l[cur]||{};if(n)l[cur][d.id]=n;else delete l[cur][d.id];if(!Object.keys(l[cur]).length)delete l[cur];saveBooks()}
+  else if(a=='bdl'){S.b.list.find(k=>k.id==d.id).dl=t.value;saveBooks()}
+  else if(a=='bdate'){if(t.value){cur=t.value;bm=cur.slice(0,7)}}
+  else if(a=='bgoal'){S.b.goal[d.k]=Math.max(0,parseInt(t.value)||0);saveBooks()}
   else if(a=='ntg'){tp(selTop).notes.find(n=>n.id==d.id).d=t.checked;saveSelf()}
   else return false;
   return true}
 
+/* ---- books: dated reading log (never tied to the weekly routine) ---- */
+let bm=cur.slice(0,7),bh='month';
+const BDEF=()=>({list:[],log:{},goal:{d:0,m:0,y:0}});
+const saveBooks=()=>save('books',S.b);
+const isBook=x=>x.id=='t1'||/book/i.test(x.n);
+const pgSum=(pre,id)=>{let n=0;for(const d in S.b.log)if(d.startsWith(pre))n+=id?(S.b.log[d][id]||0):Object.values(S.b.log[d]).reduce((a,v)=>a+v,0);return n};
+const pgDay=(d,id)=>(S.b.log[d]||{})[id]||0;
+const bookRead=k=>pgSum('',k.id);
+function vBooks(){const b=S.b,g=b.goal,y=bm.slice(0,4);
+  const gl=(l,v,t)=>`<div class="row" style="border:0;padding:4px 0"><span>${l}</span><span class="mu">${v}${t>0?' / '+t:''} pages</span></div>${t>0?`<div class="bar" style="margin:0"><i style="width:${Math.min(100,Math.round(100*v/t))}%"></i></div>`:''}`;
+  const gi=(l,k)=>`<div class="row"><span>${l}</span><input type="number" min="0" value="${g[k]||''}" placeholder="off" data-act="bgoal" data-k="${k}" style="width:90px"></div>`;
+  const books=b.list.map(k=>{const r=bookRead(k),left=Math.max(0,k.pages-r),pc=k.pages?Math.min(100,Math.round(100*r/k.pages)):0,done=k.pages>0&&r>=k.pages,dl=k.dl?Math.round((parse(k.dl)-parse(cur))/864e5)+1:0,need=(!done&&dl>0)?Math.ceil(left/dl):0;
+    return `<div style="padding:10px 0;border-bottom:1px solid rgba(70,140,255,.15)"><div class="row" style="border:0;padding:0"><b class="${done?'dn':''}">${esc(k.t)}</b><button data-act="delbk" data-id="${k.id}">${armed=='bk'+k.id?'Sure?':'✕'}</button></div>
+    <div class="bar"><i style="width:${pc}%"></i></div><small>${r} / ${k.pages} pages · ${pc}%${done?' · finished':' · '+left+' left'}${k.dl&&!done?(dl>0?' · due '+k.dl+' · read '+need+'/day':' · overdue ('+k.dl+')'):''}</small>
+    <div class="row" style="border:0;padding:6px 0 0"><span class="mu">Pages read on ${cur}</span><input type="number" min="0" value="${pgDay(cur,k.id)||''}" placeholder="0" data-act="bpg" data-id="${k.id}" style="width:90px"></div>
+    <div class="row" style="border:0;padding:0"><span class="mu">Finish by</span><input type="date" value="${k.dl||''}" data-act="bdl" data-id="${k.id}"></div></div>`}).join('')||'<p class="mu" style="margin:0">No books yet.</p>';
+  let hist;
+  if(bh=='month'){const f=parse(bm+'-01'),n=new Date(f.getFullYear(),f.getMonth()+1,0).getDate(),off=(f.getDay()+6)%7;let c='',mx=1;
+    for(let i=1;i<=n;i++)mx=Math.max(mx,pgSum(bm+'-'+String(i).padStart(2,'0')));
+    ['M','T','W','T','F','S','S'].forEach(w=>c+=`<div class="h">${w}</div>`);for(let i=0;i<off;i++)c+='<div class="h"></div>';
+    for(let i=1;i<=n;i++){const v=pgSum(bm+'-'+String(i).padStart(2,'0'));c+=`<div style="flex-direction:column;line-height:1.1;background:color-mix(in srgb,#38d6ff ${Math.round(100*v/mx)}%,rgba(80,130,230,.15))"><span>${i}</span><span style="font-size:10px">${v||''}</span></div>`}
+    hist=`<div class="hd"><button data-act="bmnav" data-s="-1">‹</button><b>${f.toLocaleDateString('en',{month:'long',year:'numeric'})} · ${pgSum(bm)} pages</b><button data-act="bmnav" data-s="1">›</button></div><div class="cal">${c}</div>`}
+  else{let mx=1;const ms=[...Array(12)].map((_,i)=>{const v=pgSum(y+'-'+String(i+1).padStart(2,'0'));mx=Math.max(mx,v);return v});
+    hist=`<div class="hd"><button data-act="bmnav" data-s="-12">‹</button><b>${y} · ${pgSum(y)} pages</b><button data-act="bmnav" data-s="12">›</button></div><div class="cols" style="gap:3px">${ms.map((v,i)=>`<div class="col"><small>${v||''}</small><div class="cb"><i style="height:${Math.round(100*v/mx)}%"></i></div><small>${new Date(2000,i,1).toLocaleDateString('en',{month:'narrow'})}</small></div>`).join('')}</div>`}
+  return `<div class="card"><h3>Books</h3><div class="row" style="border:0;padding-top:0"><span class="mu">Date</span><input type="date" value="${cur}" data-act="bdate"></div>${gl('That day',pgSum(cur),g.d)}${gl('That month',pgSum(cur.slice(0,7)),g.m)}${gl('That year',pgSum(cur.slice(0,4)),g.y)}</div>
+  <div class="card"><h3>Your books</h3>${books}<div class="f" style="margin-top:10px"><input id="bt" placeholder="Book name"><input id="bp" type="number" min="1" placeholder="Total pages"><input id="bd" type="date" class="w"><small class="w">Finish by (optional)</small><button class="pri w" data-act="addbk">Add book</button></div></div>
+  <div class="card"><h3>Reading goals (pages)</h3>${gi('Per day','d')}${gi('Per month','m')}${gi('Per year','y')}</div>
+  <div class="card"><h3>Reading history</h3><div class="seg">${['month','year'].map(r=>`<button data-act="bhist" data-v="${r}" class="${bh==r?'on':''}">${r}</button>`).join('')}</div>${hist}</div>`}
+
+/* ---- plan: everything is planned per DATE (no weekday templates) ---- */
+let pd=cur,pm=cur.slice(0,7);
+const dlabel=d=>parse(d).toLocaleDateString('en',{day:'numeric',month:'short',year:'numeric'});
+const ensurePlans=async y=>{if(!S.p[y])S.p[y]=(await load('plans-'+y,{days:{}})).days||{}};
+const savePlans=y=>save('plans-'+y,{days:S.p[y]});
+const hasP=P=>!!(P&&((P.ex||[]).length||(P.fd||[]).length||(P.study||[]).length||(P.self||[]).length||(P.td||[]).length));
+const fz2p=f=>({ex:f.rest?['Rest']:f.ex.slice(),fd:f.fd.slice(),study:f.study.slice(),self:f.self.slice(),td:[]});
+function dp(d){const r=(S.p[d.slice(0,4)]||{})[d];if(r)return r;const f=day(d).fz;return f?fz2p(f):{}}
+function tg(d){const l=(S.s.tv||[]).filter(x=>x.from<=d).sort((a,b)=>a.from.localeCompare(b.from));return l.length?l[l.length-1]:{wake:S.s.wake,sleep:S.s.sleep,wmin:S.s.wmin,wmax:S.s.wmax,protein:S.s.protein}}
+function plan(d){const P=dp(d),f=day(d).fz,T=f||tg(d),ex=P.ex||[],rest=isRest(ex);
+  return{wake:T.wake,sleep:T.sleep,wmin:T.wmin,wmax:T.wmax,protein:T.protein,rest,ex:rest?[]:ex,fd:P.fd||[],study:P.study||[],self:P.self||[],td:P.td||[]}}
+function setP(d,patch){const y=d.slice(0,4);S.p[y]=S.p[y]||{};const o=Object.assign(JSON.parse(JSON.stringify(dp(d))),patch);
+  if(!hasP(o)&&!day(d).fz)delete S.p[y][d];else S.p[y][d]=o;savePlans(y)}
+function copyPlan(from,to,clear){const src=JSON.parse(JSON.stringify(dp(pd))),ys=new Set();let d=from,n=0;
+  while(d<=to&&n<400){const y=d.slice(0,4);S.p[y]=S.p[y]||{};if(clear)delete S.p[y][d];else S.p[y][d]=JSON.parse(JSON.stringify(src));ys.add(y);d=addD(d,1);n++}ys.forEach(savePlans)}
+function purgeFuture(kind,id){const t=iso(new Date()),k=kind=='study'?'study':'self',key=kind=='study'?'s':'id';
+  for(const y in S.p){let ch=false;for(const d in S.p[y])if(d>=t){const P=S.p[y][d],a=P[k]||[],b=a.filter(i=>i[key]!=id);if(b.length!=a.length){P[k]=b;ch=true}}if(ch)savePlans(y)}}
+function migrateWeekly(){const t=iso(new Date()),y=t.slice(0,4);S.p[y]=S.p[y]||{};let d=t;
+  while(d.slice(0,4)==y){const k=dk(d);if(!S.p[y][d]){const o={ex:(S.s.ex[k]||[]).slice(),fd:(S.s.fd[k]||[]).slice(),td:[],
+    study:((S.c.plan||{})[k]||[]).map(i=>({s:i.s,h:i.h,nm:(sub(i.s)||{}).n||''})),
+    self:S.f.topics.filter(x=>((x.sch||{})[k]||{}).h>0).map(x=>({id:x.id,n:x.n,h:x.sch[k].h,at:x.sch[k].at||''}))};if(hasP(o))S.p[y][d]=o}d=addD(d,1)}
+  savePlans(y);S.s.mig=1;saveSet()}
+function vPlan(){const P=dp(pd),T=tg(pd),t0=iso(new Date()),f=parse(pm+'-01'),n=new Date(f.getFullYear(),f.getMonth()+1,0).getDate(),off=(f.getDay()+6)%7;let c='';
+  ['M','T','W','T','F','S','S'].forEach(w=>c+=`<div class="h">${w}</div>`);for(let i=0;i<off;i++)c+='<div class="h"></div>';
+  for(let i=1;i<=n;i++){const d=pm+'-'+String(i).padStart(2,'0');c+=`<button data-act="psel" data-d="${d}" class="${hasP(dp(d))?'has ':''}${d==pd?'sel ':''}${d==t0?'tod':''}">${i}</button>`}
+  const opt=(arr,id,nm,idk)=>(arr.some(u=>u.id==id)?'':`<option value="${id}" selected>${esc(nm||'Deleted')}</option>`)+arr.map(u=>`<option value="${u.id}" ${u.id==id?'selected':''}>${esc(u.n)}</option>`).join('');
+  const sr=(P.study||[]).map((i,k)=>`<div class="row"><select data-act="pst" data-i="${k}" data-f="s" style="flex:1">${opt(S.c.subs,i.s,i.nm)}</select><input type="number" step="0.5" min="0" value="${i.h}" data-act="pst" data-i="${k}" data-f="h" style="width:70px"><button data-act="pstdel" data-i="${k}">✕</button></div>`).join('');
+  const fr=(P.self||[]).map((i,k)=>`<div class="row" style="flex-wrap:wrap"><select data-act="psf" data-i="${k}" data-f="id" style="flex:1">${opt(S.f.topics,i.id,i.n)}</select><input type="number" step="0.5" min="0" value="${i.h}" data-act="psf" data-i="${k}" data-f="h" style="width:64px"><input type="time" value="${i.at||''}" data-act="psf" data-i="${k}" data-f="at"><button data-act="psfdel" data-i="${k}">✕</button></div>`).join('');
+  const tx=(l,f2,v,h)=>`<small style="margin-top:6px">${l}</small><textarea data-act="ptx" data-f="${f2}" placeholder="${h||''}">${esc((v||[]).join('\n'))}</textarea>`;
+  return `<div class="hd"><button data-act="pmnav" data-s="-1">‹</button><b>${f.toLocaleDateString('en',{month:'long',year:'numeric'})}</b><button data-act="pmnav" data-s="1">›</button></div>
+  <div class="card"><div class="cal">${c}</div><small style="margin-top:6px">Blue dates already have a plan. Tap a date to plan it.</small></div>
+  <div class="card"><div class="row" style="border:0;padding-top:0"><h3 style="margin:0">Plan for</h3><input type="date" value="${pd}" data-act="pdate"></div>${pd<t0?'<small>Past date: changing it changes that day\'s score.</small>':''}
+  ${tx('Exercise (one per line, write Rest for a rest day)','ex',P.ex)}${tx('Food (one per line)','fd',P.fd)}${tx('Tasks for this date (one per line)','td',P.td)}</div>
+  <div class="card"><h3>Study</h3>${sr||'<p class="mu" style="margin:0">No study planned.</p>'}<button data-act="pstadd" style="width:100%;margin-top:6px">+ Add subject</button>${S.c.subs.length?'':'<small>Add subjects in College first.</small>'}</div>
+  <div class="card"><h3>Self</h3>${fr||'<p class="mu" style="margin:0">Nothing planned.</p>'}<button data-act="psfadd" style="width:100%;margin-top:6px">+ Add topic</button></div>
+  <div class="card"><h3>Copy this date's plan</h3><div class="row"><span class="mu">From</span><input id="cf" type="date" value="${addD(pd,1)}"></div><div class="row"><span class="mu">To</span><input id="ct" type="date" value="${addD(pd,7)}"></div>
+  <div class="st" style="margin-top:8px"><button class="pri" data-act="pcopy">Copy to range</button><button data-act="pnext">Next 7 days</button><button data-act="pclear">Clear range</button></div></div>
+  <div class="card"><h3>Targets</h3><small>Wake, sleep, water and protein. Past dates keep the targets they had.</small>
+  <div class="row"><span>Wake up</span><input id="tw" type="time" value="${T.wake}"></div><div class="row"><span>Sleep</span><input id="ts" type="time" value="${T.sleep}"></div>
+  <div class="row"><span>Water min (L)</span><input id="tmn" type="number" step="0.25" value="${T.wmin}" style="width:90px"></div><div class="row"><span>Water max (L)</span><input id="tmx" type="number" step="0.25" value="${T.wmax}" style="width:90px"></div>
+  <div class="row"><span>Protein (g)</span><input id="tpr" type="number" value="${T.protein}" style="width:90px"></div><div class="row"><span>Apply from</span><input id="tf" type="date" value="${pd<t0?t0:pd}"></div>
+  <button class="pri" style="width:100%;margin-top:8px" data-act="tsave">Save targets</button></div>`}
+function planClick(b,a){const d=b.dataset;
+  if(a=='pedit'){tab='plan';pd=d.d;pm=pd.slice(0,7)}
+  else if(a=='psel')pd=d.d;
+  else if(a=='pmnav')pm=shiftMon(pm,+d.s);
+  else if(a=='pstadd'){const u=S.c.subs[0];if(u)setP(pd,{study:[...(dp(pd).study||[]),{s:u.id,h:1,nm:u.n}]})}
+  else if(a=='pstdel')setP(pd,{study:(dp(pd).study||[]).filter((_,i)=>i!=+d.i)});
+  else if(a=='psfadd'){const u=S.f.topics[0];if(u)setP(pd,{self:[...(dp(pd).self||[]),{id:u.id,n:u.n,h:1,at:''}]})}
+  else if(a=='psfdel')setP(pd,{self:(dp(pd).self||[]).filter((_,i)=>i!=+d.i)});
+  else if(a=='pcopy'||a=='pclear'||a=='pnext'){const from=a=='pnext'?addD(pd,1):$('#cf').value,to=a=='pnext'?addD(pd,7):$('#ct').value;if(from&&to&&from<=to)copyPlan(from,to,a=='pclear')}
+  else if(a=='tsave'){const fr=$('#tf').value||iso(new Date()),e={from:fr,wake:$('#tw').value||'05:30',sleep:$('#ts').value||'22:00',wmin:+$('#tmn').value||0,wmax:+$('#tmx').value||0,protein:+$('#tpr').value||0};
+    if(e.wmax<e.wmin)e.wmax=e.wmin;S.s.tv=(S.s.tv||[]).filter(x=>x.from!=fr).concat(e);saveSet()}
+  else return false;
+  return true}
+function planChange(t,a){const d=t.dataset;
+  if(a=='ptx')setP(pd,{[d.f]:lines(t.value)});
+  else if(a=='pst'){const l=JSON.parse(JSON.stringify(dp(pd).study||[])),i=l[+d.i];if(d.f=='h')i.h=Math.max(0,parseFloat(t.value)||0);else{i.s=t.value;i.nm=(sub(t.value)||{}).n||''}setP(pd,{study:l})}
+  else if(a=='psf'){const l=JSON.parse(JSON.stringify(dp(pd).self||[])),i=l[+d.i];if(d.f=='h')i.h=Math.max(0,parseFloat(t.value)||0);else if(d.f=='at')i.at=t.value;else{i.id=t.value;i.n=(tp(t.value)||{}).n||''}setP(pd,{self:l})}
+  else if(a=='tkd'){const dn=Object.assign({},day(cur).tdone||{});dn[d.t]=t.checked;setDay(cur,{tdone:dn})}
+  else if(a=='pdate'){if(t.value){pd=t.value;pm=pd.slice(0,7)}}
+  else return false;
+  return true}
+
 async function render(){
-  const y=+cur.slice(0,4);await ensureYear(String(y));await ensureYear(String(y-1));await ensureMon(cur.slice(0,7));await ensureMon(mon);
-  const nm={home:'Home',health:'Health',college:'College',self:'Self',stats:'Stats',money:'Money'};
+  const y=+cur.slice(0,4);await ensureYear(String(y));await ensureYear(String(y-1));await ensureMon(cur.slice(0,7));await ensureMon(mon);await ensurePlans(String(y));await ensurePlans(pm.slice(0,4));await ensurePlans(pd.slice(0,4));
+  const nm={home:'Home',health:'Health',college:'College',self:'Self',plan:'Plan',stats:'Stats',money:'Money'};
   $('#nav').innerHTML=Object.keys(nm).map(k=>`<button data-act="go" data-t="${k}" class="${tab==k?'on':''}">${nm[k]}</button>`).join('');
-  const hd=(tab=='health'||tab=='stats'||(tab=='college'&&cv=='main')||(tab=='self'&&sv=='main'))&&!editing?`<div class="hd"><button data-act="dnav" data-s="-1">‹</button><b>${cur==iso(new Date())?'Today · ':''}${parse(cur).toLocaleDateString('en',{weekday:'short',day:'numeric',month:'short'})}</b><button data-act="dnav" data-s="1">›</button></div>`:'';
-  $('#v').innerHTML=hd+({home:vHome,health:vHealth,college:vCollege,self:vSelf,stats:vStats,money:vMoney}[tab])();
+  const hd=(tab=='health'||tab=='stats'||(tab=='college'&&cv=='main')||(tab=='self'&&sv=='main'))&&!editing?`<div class="hd"><button data-act="dnav" data-s="-1">‹</button><b>${cur==iso(new Date())?'Today · ':''}${dlabel(cur)}</b><button data-act="dnav" data-s="1">›</button></div>`:'';
+  $('#v').innerHTML=hd+({home:vHome,health:vHealth,college:vCollege,self:vSelf,plan:vPlan,stats:vStats,money:vMoney}[tab])();lvCheck();
 }
-function capture(){if(editing&&$('#ex-mon')){DAYS.forEach(d=>{S.s.ex[d]=lines($('#ex-'+d).value);S.s.fd[d]=lines($('#fd-'+d).value)});saveSet()}}
+function capture(){}
 
 document.addEventListener('click',async e=>{
   const b=e.target.closest('button[data-act]');if(!b)return;const a=b.dataset.act;
@@ -272,10 +398,8 @@ document.addEventListener('click',async e=>{
   else if(a=='rng')rng=b.dataset.r;
   else if(colClick(b,a)){}
   else if(selfClick(b,a)){}
+  else if(planClick(b,a)){}
   else if(a=='mnav')mon=shiftMon(mon,+b.dataset.s);
-  else if(a=='edit')editing=true;
-  else if(a=='eday'){capture();editDay=b.dataset.d}
-  else if(a=='saveplan'){capture();editing=false}
   else if(a=='step'){const k=b.dataset.k;setDay(cur,{[k]:Math.max(0,+((day(cur)[k]||0)+ +b.dataset.s).toFixed(2))})}
   else if(a=='addtx'){const amt=parseFloat($('#ta').value),d=$('#td').value||cur;if(!(amt>0))return $('#ta').focus();
     const m=d.slice(0,7);await ensureMon(m);S.money[m].push({id:uid0(),d,t:$('#tt').value,a:amt,c:$('#tc').value.trim(),n:$('#tn').value.trim()});saveMoney(m);mon=m}
@@ -287,9 +411,10 @@ document.addEventListener('change',e=>{
   else if(a=='wake')setDay(cur,{wake:t.value});
   else if(colChange(t,a)){}
   else if(selfChange(t,a)){}
+  else if(planChange(t,a)){}
   else if(a=='cfg'){const k=t.dataset.k;S.s[k]=(k=='wake'||k=='sleep')?(t.value||S.s[k]):Math.max(0,parseFloat(t.value)||0);if(S.s.wmax<S.s.wmin)S.s.wmax=S.s.wmin;saveSet();if(k=='budget')return render()}
   if(a!='cfg')render()});
 
-(async()=>{await init();S.s=Object.assign(DEF(),await load('health',{}));S.c=Object.assign(CDEF(),await load('college',{}));S.f=Object.assign(SDEF(),await load('self',{}));render()})();
+(async()=>{await init();S.s=Object.assign(DEF(),await load('health',{}));S.c=Object.assign(CDEF(),await load('college',{}));S.f=Object.assign(SDEF(),await load('self',{}));S.b=Object.assign(BDEF(),await load('books',{}));const y0=+cur.slice(0,4);for(let i=y0-5;i<=y0;i++)await ensureYear(String(i));for(let i=y0-5;i<=y0+2;i++)await ensurePlans(String(i));if(!S.s.mig){freezeSync();migrateWeekly()}await render();lvCheck()})();
 </script>
 </body></html>
