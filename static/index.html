@@ -82,6 +82,23 @@ nav button{font-size:11px;padding:10px 0;letter-spacing:0}
 .rl{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 6px}.rl a,.rl span{border:1px solid var(--bd);padding:2px 8px;font-size:13px;color:var(--ok)}.rl span{color:var(--mu)}
 .nrow{padding:4px 0;border:0;font-size:14px}
 .subt{display:block;background:none;border:0;padding:0 0 8px 30px;font-size:12px;color:var(--mu);cursor:pointer;text-align:left}
+
+/* ---- home reminder feed (plain messages, no boxes) ---- */
+.feed{margin:16px 2px 0}
+.feedh{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--mu);margin:0 0 6px;text-shadow:0 0 8px rgba(80,150,255,.5)}
+.feedh::after{content:"_";color:var(--ok);margin-left:2px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.msg{display:flex;align-items:baseline;gap:8px;width:100%;background:none;border:0;padding:5px 0 5px 12px;text-align:left;cursor:pointer;font-size:15px;line-height:1.3;position:relative}
+.msg::before{content:"";position:absolute;left:0;top:50%;width:5px;height:5px;background:currentColor;transform:translateY(-50%) rotate(45deg);box-shadow:0 0 8px currentColor}
+.msg .tg{font-size:11px;font-weight:700;letter-spacing:.16em;min-width:64px;flex:none}
+.msg .tx{color:var(--tx);opacity:.92}
+.msg.health{color:#ff7a93}.msg.college{color:#7fa6ff}.msg.self{color:#c99cff}.msg.ok{color:var(--ok);cursor:default}
+.msg.an{animation:msgin .45s both}
+@keyframes msgin{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+/* ---- stats: money bars ---- */
+.accb .card{border:0;box-shadow:none;background:none;padding:0;margin:0 0 10px}.accb .card::before,.accb .card::after{display:none}
+.cb.mb{gap:2px;padding:0 1px}.cb.mb i{width:auto;flex:1}
+.mb .mi{background:linear-gradient(0deg,#0e7490,#38d6ff)}.mb .mo{background:linear-gradient(0deg,#be123c,#ff5d7a)}
 </style></head>
 <body>
 <main id="v"><p class="mu">Loading…</p></main>
@@ -158,8 +175,26 @@ function vHome(){const p=pct(cur),x=day(cur),pl=plan(cur),td=pl.td,tn=x.tdone||{
   <button class="tile" data-act="go" data-t="college">${colTile()}</button>
   <button class="tile" data-act="go" data-t="self">${selfTile()}</button>
   <button class="tile" data-act="go" data-t="plan"><div class="ic">🗓️</div><h2>Plan</h2><div class="pc">${plannedAhead()}</div><small>days ahead</small></button>
-  <button class="tile" data-act="go" data-t="money"><div class="ic">💰</div><h2>Money</h2><div class="pc">${fmtC(moneyBal(cur.slice(0,7)))}</div><small>this month</small></button></div>`
-  +(td.length?`<div class="card" style="margin-top:12px"><h3>Tasks · ${dlabel(cur)}</h3>${td.map(t=>`<label class="row"><input type="checkbox" data-act="tkd" data-t="${esc(t)}" ${tn[t]?'checked':''}><span class="${tn[t]?'dn':''}">${esc(t)}</span></label>`).join('')}</div>`:'')}
+  <button class="tile" data-act="go" data-t="money"><div class="ic">💰</div><h2>Money</h2><div class="pc">${fmtC(moneyBal(cur.slice(0,7)))}</div><small>${moneyLeft()}</small></button></div>`
+  +(td.length?`<div class="card" style="margin-top:12px"><h3>Tasks · ${dlabel(cur)}</h3>${td.map(t=>`<label class="row"><input type="checkbox" data-act="tkd" data-t="${esc(t)}" ${tn[t]?'checked':''}><span class="${tn[t]?'dn':''}">${esc(t)}</span></label>`).join('')}</div>`:'')+homeFeed()}
+
+/* ---- home: remaining-task reminders (messages, not boxes) ---- */
+let fa=true;
+function homeFeed(){const x=day(cur),dn=x.done||{},P=plan(cur),L=[],add=(g,t)=>L.push({g,t});
+  if(!dn.wake)add('health','Wake up at '+tm(P.wake));
+  P.ex.filter(t=>!dn['e:'+t]).forEach(t=>add('health','Exercise · '+t));
+  P.fd.filter(t=>!dn['f:'+t]).forEach(t=>add('health','Meal · '+t));
+  const w=x.water||0;if(P.wmin>0&&w<P.wmin)add('health','Water · '+(+(P.wmin-w).toFixed(2))+' L more to reach '+P.wmin+' L');
+  const pr=x.protein||0;if(P.protein>0&&pr<P.protein)add('health','Protein · '+(+(P.protein-pr).toFixed(1))+' g left');
+  if(!dn.sleep)add('health','Sleep by '+tm(P.sleep));
+  const sp=planSum(cur);sp.pl.filter(i=>!sp.sd[i.s]).forEach(i=>add('college','Study · '+(i.nm||'Deleted subject')+' · '+i.h+'h'));
+  S.c.subs.filter(u=>u.bl!=2&&asgLeft(u)>0).forEach(u=>add('college','Assignments · '+u.n+' · '+asgLeft(u)+' left'));
+  S.c.subs.filter(u=>u.bl==1).forEach(u=>add('college','Backlog to clear · '+u.n));
+  const se=selfPlan(cur);se.it.filter(i=>!se.dn[i.id]).forEach(i=>add('self',i.n+' · '+i.h+'h'+(i.at?' at '+tm(i.at):'')));
+  S.f.topics.forEach(t=>{const n=(t.notes||[]).filter(z=>!z.d).length;if(n)add('self','Revise · '+t.n+' · '+n+' missed note'+(n>1?'s':''))});
+  const tag={health:'HEALTH',college:'COLLEGE',self:'SELF'},an=fa;fa=false;
+  return `<div class="feed"><div class="feedh">System notice · ${L.length?L.length+' pending':'all clear'}</div>`
+  +(L.length?L.map((m,i)=>`<button class="msg ${m.g}${an?' an':''}" data-act="go" data-t="${m.g}" style="animation-delay:${Math.min(i,14)*45}ms"><span class="tg">${tag[m.g]}</span><span class="tx">${esc(m.t)}</span></button>`).join(''):`<div class="msg ok${an?' an':''}"><span class="tg">CLEAR</span><span class="tx">Nothing pending. Rest well.</span></div>`)+`</div>`}
 
 function vHealth(){const x=day(cur),s=plan(cur),dn=x.done||{},p=pct(cur),w=x.water||0,
   nd=(a,pre)=>a.filter(t=>dn[pre+t]).length;
@@ -170,21 +205,67 @@ function vHealth(){const x=day(cur),s=plan(cur),dn=x.done||{},p=pct(cur),w=x.wat
   +acc('h-food','Food',`${s.fd.length?nd(s.fd,'f:')+'/'+s.fd.length+' · ':''}${x.protein||0} g protein`,`${s.fd.map(t=>chk('f:'+t,t,dn)).join('')||'<p class="mu" style="margin:0">No meals planned.</p>'}<div style="height:8px"></div>${meter('protein','Protein','g',[-10,10,25],x.protein||0,s.protein)}`)
   +`<button class="pri" style="width:100%" data-act="pedit" data-d="${cur}">Plan this date</button>`}
 
-function vStats(){let h=`<div class="seg">${['week','month','year'].map(r=>`<button data-act="rng" data-r="${r}" class="${rng==r?'on':''}">${({week:'7 days',month:'month',year:'year'})[r]}</button>`).join('')}</div>`;
-  if(rng=='week'){const ds=[...Array(7)].map((_,i)=>addD(cur,i-6)),a=k=>Math.round(ds.reduce((t,d)=>t+(day(d)[k]||0),0)/7*10)/10;
-    h+=`<div class="card"><h3>Last 7 days</h3><div class="cols">${ds.map(d=>`<div class="col"><div class="cb"><i style="height:${pct(d)}%"></i></div><small>${parse(d).toLocaleDateString('en',{day:'numeric',month:'short'})}</small><small>${pct(d)}%</small></div>`).join('')}</div></div>
-    <div class="card grid"><div><b>${Math.round(ds.reduce((t,d)=>t+pct(d),0)/7)}%</b><small>avg score</small></div><div><b>${a('water')}</b><small>avg water L</small></div><div><b>${a('protein')}</b><small>avg protein g</small></div><div><b>${streak()}</b><small>day streak</small></div></div>`;
-  }else if(rng=='month'){const m=cur.slice(0,7),f=parse(m+'-01'),n=new Date(f.getFullYear(),f.getMonth()+1,0).getDate(),off=(f.getDay()+6)%7;let c='',t=0;
+/* ---- stats: health + college + self + money ---- */
+let sc='all';
+const CATS={
+ health:{n:'Health',c:'#38d6ff',g:'linear-gradient(0deg,#2563eb,#38d6ff)',f:d=>pct(d)},
+ college:{n:'College',c:'#6d8bff',g:'linear-gradient(0deg,#4338ca,#8ab4ff)',f:d=>{const p=planSum(d);return p.t?Math.round(100*p.d/p.t):null}},
+ self:{n:'Self',c:'#c084fc',g:'linear-gradient(0deg,#7c3aed,#d8b4fe)',f:d=>{const p=selfPlan(d);return p.t?Math.round(100*p.d/p.t):null}}};
+const pad2=n=>String(n).padStart(2,'0');
+const mdays=m=>{const[y,mo]=m.split('-').map(Number),n=new Date(y,mo,0).getDate();return[...Array(n)].map((_,i)=>m+'-'+pad2(i+1))};
+const week7=()=>[...Array(7)].map((_,i)=>addD(cur,i-6));
+const sd2=d=>parse(d).toLocaleDateString('en',{day:'numeric',month:'short'});
+const rdates=()=>{if(rng=='week')return week7();if(rng=='month')return mdays(cur.slice(0,7));const y=cur.slice(0,4);return[...new Set([...Object.keys(S.p[y]||{}),...Object.keys(S.days[y]||{})])].filter(d=>d.startsWith(y)).sort()};
+const hdates=()=>rng=='year'?rdates().filter(d=>(S.days[cur.slice(0,4)]||{})[d]):rdates();
+const avgS=a=>{const v=a.filter(z=>z!=null);return v.length?Math.round(v.reduce((x,y)=>x+y,0)/v.length):0};
+const rlab=()=>rng=='week'?'last 7 days':rng=='month'?parse(cur.slice(0,7)+'-01').toLocaleDateString('en',{month:'long',year:'numeric'}):cur.slice(0,4);
+const mon1=m=>new Date(2000,m-1,1).toLocaleDateString('en',{month:'narrow'});
+
+function catChart(k){const C=CATS[k];
+  if(rng=='week')return `<div class="card"><h3>${C.n} · last 7 days</h3><div class="cols">${week7().map(d=>{const v=C.f(d);return `<div class="col"><div class="cb"><i style="height:${v||0}%;background:${C.g}"></i></div><small>${sd2(d)}</small><small>${v==null?'—':v+'%'}</small></div>`}).join('')}</div></div>`;
+  if(rng=='month'){const m=cur.slice(0,7),f=parse(m+'-01'),off=(f.getDay()+6)%7;let c='';
     ['M','T','W','T','F','S','S'].forEach(w=>c+=`<div class="h">${w}</div>`);for(let i=0;i<off;i++)c+='<div class="h"></div>';
-    for(let i=1;i<=n;i++){const d=m+'-'+String(i).padStart(2,'0'),p=pct(d);t+=p;c+=`<div style="background:color-mix(in srgb,#38d6ff ${p}%,rgba(80,130,230,.15))">${i}</div>`}
-    h+=`<div class="card"><h3>${f.toLocaleDateString('en',{month:'long',year:'numeric'})}</h3><div class="cal">${c}</div></div><div class="card"><b>${Math.round(t/n)}%</b> <span class="mu">average score · ${streak()} day streak</span></div>`;
-  }else{const y=cur.slice(0,4),all=S.days[y]||{};let cols='';
-    for(let m=1;m<=12;m++){const k=y+'-'+String(m).padStart(2,'0'),ks=Object.keys(all).filter(d=>d.startsWith(k)),a=ks.length?Math.round(ks.reduce((t,d)=>t+pct(d),0)/ks.length):0;
-      cols+=`<div class="col"><div class="cb"><i style="height:${a}%"></i></div><small>${new Date(2000,m-1,1).toLocaleDateString('en',{month:'narrow'})}</small></div>`}
-    h+=`<div class="card"><h3>${y} · average score by month</h3><div class="cols" style="gap:3px">${cols}</div></div>`}
-  return h}
+    mdays(m).forEach((d,i)=>{const v=C.f(d);c+=`<div style="background:${v==null?'rgba(80,130,230,.15)':`color-mix(in srgb,${C.c} ${v}%,rgba(80,130,230,.15))`}">${i+1}</div>`});
+    return `<div class="card"><h3>${C.n} · ${rlab()}</h3><div class="cal">${c}</div></div>`}
+  const y=cur.slice(0,4),ds=k=='health'?hdates():rdates();let cols='';
+  for(let m=1;m<=12;m++){const k2=y+'-'+pad2(m),a=avgS(ds.filter(d=>d.startsWith(k2)).map(C.f));
+    cols+=`<div class="col"><div class="cb"><i style="height:${a}%;background:${C.g}"></i></div><small>${mon1(m)}</small></div>`}
+  return `<div class="card"><h3>${y} · ${C.n} average by month</h3><div class="cols" style="gap:3px">${cols}</div></div>`}
+function healthSum(){const ds=rdates();
+  if(rng=='week'){const a=k=>Math.round(ds.reduce((t,d)=>t+(day(d)[k]||0),0)/7*10)/10;
+    return `<div class="card grid"><div><b>${Math.round(ds.reduce((t,d)=>t+pct(d),0)/7)}%</b><small>avg score</small></div><div><b>${a('water')}</b><small>avg water L</small></div><div><b>${a('protein')}</b><small>avg protein g</small></div><div><b>${streak()}</b><small>day streak</small></div></div>`}
+  if(rng=='month')return `<div class="card"><b>${Math.round(ds.reduce((t,d)=>t+pct(d),0)/ds.length)}%</b> <span class="mu">average score · ${streak()} day streak</span></div>`;
+  return ''}
+const hrs=(ds,fn)=>ds.reduce((a,d)=>{const p=fn(d);a.t+=p.t;a.d+=p.d;return a},{t:0,d:0});
+function collegeSum(){const ds=rdates(),c=S.c,h=hrs(ds,planSum),asg=c.subs.filter(u=>u.bl!=2).reduce((a,u)=>a+asgLeft(u),0),syl=c.subs.length?Math.round(c.subs.reduce((a,u)=>a+sylP(u),0)/c.subs.length):0;
+  return `<div class="card grid"><div><b>${avgS(ds.map(CATS.college.f))}%</b><small>avg study</small></div><div><b>${+h.d.toFixed(1)}/${+h.t.toFixed(1)}</b><small>hours done</small></div><div><b>${asg}</b><small>assignments left</small></div><div><b>${syl}%</b><small>syllabus done</small></div></div>`}
+function selfSum(){const ds=rdates(),f=S.f,h=hrs(ds,selfPlan),nt=f.topics.reduce((a,x)=>a+(x.notes||[]).filter(n=>!n.d).length,0);
+  return `<div class="card grid"><div><b>${avgS(ds.map(CATS.self.f))}%</b><small>avg growth</small></div><div><b>${+h.d.toFixed(1)}/${+h.t.toFixed(1)}</b><small>hours done</small></div><div><b>${nt}</b><small>notes to cover</small></div><div><b>${f.topics.length}</b><small>topics</small></div></div>`}
+function mgroups(){const y=cur.slice(0,4);
+  if(rng=='year')return[...Array(12)].map((_,i)=>({l:mon1(i+1),it:S.money[y+'-'+pad2(i+1)]||[]}));
+  const ds=rng=='week'?week7():mdays(cur.slice(0,7));
+  return ds.map((d,i)=>({l:rng=='week'?sd2(d):((i+1)%5==1?String(i+1):'\u00a0'),it:(S.money[d.slice(0,7)]||[]).filter(x=>x.d==d)}))}
+function sMoney(){const gs=mgroups().map(g=>Object.assign({},g,{i:sum(g.it,'in'),o:sum(g.it,'out')})),mx=Math.max(1,...gs.map(g=>Math.max(g.i,g.o))),
+  tin=gs.reduce((a,g)=>a+g.i,0),tout=gs.reduce((a,g)=>a+g.o,0),H=v=>v>0?Math.max(3,Math.round(100*v/mx)):0,cats={},mo=rng=='month',wk=rng=='week';
+  gs.forEach(g=>g.it.filter(i=>i.t=='out').forEach(i=>{const c=i.c||'other';cats[c]=(cats[c]||0)+i.a}));
+  const cl=Object.entries(cats).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  return `<div class="card"><h3>Money · ${rlab()}</h3><div class="cols" style="gap:${mo?2:5}px">${gs.map(g=>`<div class="col"><div class="cb mb"><i class="mi" style="height:${H(g.i)}%"></i><i class="mo" style="height:${H(g.o)}%"></i></div><small style="font-size:${mo?9:12}px">${g.l}</small>${wk?`<small class="out" style="font-size:11px">${g.o?fmtC(g.o):'·'}</small>`:''}</div>`).join('')}</div><small style="margin-top:6px"><span class="in">■</span> received &nbsp; <span class="out">■</span> spent</small></div>
+  <div class="card grid"><div><b class="in">${fmtC(tin)}</b><small>received</small></div><div><b class="out">${fmtC(tout)}</b><small>spent</small></div><div><b class="${tin-tout<0?'out':''}">${fmtC(tin-tout)}</b><small>net</small></div><div><b>${fmtC(tout/gs.length)}</b><small>${rng=='year'?'avg / month':'avg / day'}</small></div></div>`
+  +(cl.length?`<div class="card"><h3>Where it went</h3>${cl.map(([k,v])=>`<div class="row" style="border:0;padding:4px 0 0"><span>${esc(k)}</span><span class="mu">${fmt(v)} · ${Math.round(100*v/tout)}%</span></div><div class="bar"><i style="width:${Math.round(100*v/cl[0][1])}%;background:linear-gradient(90deg,#be123c,#ff5d7a);box-shadow:0 0 10px var(--bad)"></i></div>`).join('')}</div>`:'')}
+function overview(){const net=mgroups().reduce((a,g)=>a+sum(g.it,'in')-sum(g.it,'out'),0);
+  return `<div class="card"><h3>Overview · ${rlab()}</h3><div class="grid"><div><b>${avgS(hdates().map(CATS.health.f))}%</b><small>health</small></div><div><b>${avgS(rdates().map(CATS.college.f))}%</b><small>college</small></div><div><b>${avgS(rdates().map(CATS.self.f))}%</b><small>self</small></div><div><b class="${net<0?'out':'in'}">${fmtC(net)}</b><small>money net</small></div></div></div>`}
+function moneySm(){return fmtC(mgroups().reduce((a,g)=>a+sum(g.it,'out'),0))+' spent'}
+function vStats(){const A2=(k,t,sm,b)=>acc('st-'+k,t,sm,b);
+  const F={health:()=>A2('health','Health',avgS(hdates().map(CATS.health.f))+'% avg',catChart('health')+healthSum()),
+   college:()=>A2('college','College',avgS(rdates().map(CATS.college.f))+'% avg',catChart('college')+collegeSum()),
+   self:()=>A2('self','Self',avgS(rdates().map(CATS.self.f))+'% avg',catChart('self')+selfSum()),
+   money:()=>A2('money','Money',moneySm(),sMoney())};
+  return `<div class="seg">${['week','month','year'].map(r=>`<button data-act="rng" data-r="${r}" class="${rng==r?'on':''}">${({week:'7 days',month:'month',year:'year'})[r]}</button>`).join('')}</div>`
+  +`<div class="chips">${[['all','All'],['health','Health'],['college','College'],['self','Self'],['money','Money']].map(([k,l])=>`<button data-act="sc" data-k="${k}" class="${sc==k?'on':''}">${l}</button>`).join('')}</div>`
+  +(sc=='all'?overview():'')+(sc=='all'?Object.keys(F):[sc]).map(k=>F[k]()).join('')}
 
 const fmtC=n=>{const a=Math.abs(n),g=n<0?'-':'';return a>=100000?g+'₹'+(a/100000).toFixed(a>=1000000?0:1)+'L':a>=1000?g+'₹'+(a/1000).toFixed(a>=10000?0:1)+'k':g+'₹'+Math.round(a)};
+const moneyLeft=()=>{const out=sum(S.money[cur.slice(0,7)]||[],'out'),b=S.s.budget;return b>0?fmtC(b-out)+' left':fmtC(out)+' spent'};
 const moneyBal=m=>{const it=S.money[m]||[];return sum(it,'in')-sum(it,'out')};
 function vMoney(){const it=S.money[mon]||[],s=S.s,inc=sum(it,'in'),out=sum(it,'out'),cats={};
   it.filter(i=>i.t=='out').forEach(i=>cats[i.c||'other']=(cats[i.c||'other']||0)+i.a);
@@ -358,7 +439,7 @@ function planChange(t,a){const d=t.dataset;
   return true}
 
 async function render(){
-  const y=+cur.slice(0,4);await ensureYear(String(y));await ensureYear(String(y-1));await ensureMon(cur.slice(0,7));await ensureMon(mon);await ensurePlans(String(y));await ensurePlans(pm.slice(0,4));await ensurePlans(pd.slice(0,4));
+  const y=+cur.slice(0,4);await ensureYear(String(y));await ensureYear(String(y-1));await ensureMon(cur.slice(0,7));await ensureMon(mon);if(tab=='stats'){for(let m=1;m<=12;m++)await ensureMon(cur.slice(0,4)+'-'+pad2(m));await ensureMon(addD(cur,-6).slice(0,7))}await ensurePlans(String(y));await ensurePlans(pm.slice(0,4));await ensurePlans(pd.slice(0,4));
   const nm={home:'Home',health:'Health',college:'College',self:'Self',plan:'Plan',stats:'Stats',money:'Money'};
   $('#nav').innerHTML=Object.keys(nm).map(k=>`<button data-act="go" data-t="${k}" class="${tab==k?'on':''}">${nm[k]}</button>`).join('');
   const hd=(tab=='health'||tab=='stats'||(tab=='college'&&cv=='main')||(tab=='self'&&sv=='main'))&&!editing?`<div class="hd"><button data-act="dnav" data-s="-1">‹</button><b>${cur==iso(new Date())?'Today · ':''}${dlabel(cur)}</b><button data-act="dnav" data-s="1">›</button></div>`:'';
@@ -368,9 +449,10 @@ function capture(){}
 
 document.addEventListener('click',async e=>{
   const b=e.target.closest('button[data-act]');if(!b)return;const a=b.dataset.act;
-  if(a=='go'){capture();editing=false;tab=b.dataset.t}
+  if(a=='go'){capture();editing=false;tab=b.dataset.t;fa=true}
   else if(a=='dnav')cur=addD(cur,+b.dataset.s);
   else if(a=='rng')rng=b.dataset.r;
+  else if(a=='sc')sc=b.dataset.k;
   else if(a=='tgl'){UI[b.dataset.id]=!UI[b.dataset.id];try{localStorage.setItem('lt:ui',JSON.stringify(UI))}catch(e){}}
   else if(colClick(b,a)){}
   else if(selfClick(b,a)){}
