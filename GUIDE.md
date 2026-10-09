@@ -29,7 +29,7 @@ All app data is saved as small **documents** (JSON) in one database table. The f
 | `plans-2026` (one per year) | **Every plan, per date** | `{days:{"2026-10-08":{ex:[..], fd:[..], td:[..], study:[{s,h,nm}], self:[{id,n,h,at}]}}}` |
 | `college` | Semesters, subjects, plan | `{sems:[{id,name}], subs:[{id,sem,n,bl,ch:[{id,t,d}],as:[{id,t,d}],fl:[{id,n,k,a}]}]}` (old weekday `plan` stays but is no longer used) |
 | `self` | Self topics: resources, notes | `{topics:[{id,n,res:[{id,t,u}],notes:[{id,t,d,dt}]}]}` (old weekday `sch` stays but is no longer used) |
-| `books` | Books, dated reading log, reading goals | `{list:[{id,t,pages,dl}], log:{"2026-10-08":{bookId:pagesReadThatDay}}, goal:{d,m,y}}` |
+| `books` | **Old, no longer used.** The book and pages feature was removed from the app. Your saved data stays in the database untouched. | `{list:[{id,t,pages,dl}], log:{"2026-10-08":{bookId:pagesReadThatDay}}, goal:{d,m,y}}` |
 | `days-2026` (one per year) | Daily records | `{days:{"2026-10-08":{done:{key:true}, water, protein, wake, sdone:{subjectId:true}, pdone:{topicId:true}, fz:{...}}}}` |
 | `money-2026-10` (one per month) | Money entries | `{items:[{id,d,t,a,c,n}]}` (date, in/out, amount, category, note) |
 
@@ -37,7 +37,7 @@ Short field names in `college`: `n` name, `bl` backlog state (0 regular, 1 pendi
 
 In `self`: `n` topic name, `res` resources (`t` title, `u` optional link), `notes` things you missed (`d` covered, `dt` date added). Daily ticks for Self topics are saved in the day record as `pdone`, and ticks for date tasks as `tdone`. What is planned for a date lives in `plans-YYYY` (`ex` exercise lines, `fd` food lines, `td` task lines, `study` and `self` rows with hours).
 
-`fz` is the **frozen plan** of a past day (see section 5b). In `books`: `t` title, `pages` total pages, `dl` optional finish-by date, `log` pages read per date per book, `goal` pages per day (`d`), month (`m`), year (`y`).
+`fz` is the **frozen plan** of a past day (see section 5b).
 
 Daily checklist keys in `done`: `wake`, `sleep`, `e:<exercise text>`, `f:<food text>`. Note: if you rename an exercise or meal in the plan, old days no longer match it. That is expected.
 
@@ -79,16 +79,15 @@ Inside the `<script>` tag, in this order:
 | Helpers | `$`, `esc`, `iso`, `parse`, `addD`, `shiftMon`, `fmt`, `uid0` | Dates, escaping text, currency, random ids |
 | State | `S.s` (health), `S.c` (college), `S.days`, `S.money` | Data in memory. `cur` is the selected date, `tab` the open screen. |
 | Storage | `init`, `load`, `save`, `flush`, `banner`, `ensureYear`, `ensureMon`, `saveDays`, `saveMoney`, `saveSet`, `saveCol` | Talks to the server. Saves are sent after 400 ms and retried every 5 s if the server is off. |
-| Health logic | `DEF`, `dk`, `isRest`, `items`, `pct`, `streak`, `xp` | Today's checklist, score, streak, XP and level (all read the plan of the date through `plan(date)`) |
+| Health logic | `DEF`, `dk`, `isRest`, `items`, `pct`, `streak` (a day counts when its daily quest is 75% or more, set by `STREAK_AT`), `xp` | Today's checklist, score, streak, XP and level (all read the plan of the date through `plan(date)`) |
 | Health screens | `vHealth`, `meter`, `chk` | Health page. Its Plan buttons open the Plan page for that date. |
-| Home and status box | `vHome`, `statusBox`, `dstat`, `lvCheck`, `plannedAhead`, `colTile`, `selfTile` | Level box (rank, XP, five stats from your last 7 days, radar chart, level-up banner), the four boxes, today's date tasks |
+| Home and status box | `vHome`, `statusBox`, `dstat`, `lvCheck`, `plannedAhead`, `colTile`, `selfTile`, `moneyBal`, `fmtC` | Level box (rank, XP, five stats from your last 7 days, radar chart, level-up banner), the five boxes (Health, College, Self, Plan, Money), today's date tasks |
 | Plan (by date) | `dlabel`, `ensurePlans`, `savePlans`, `hasP`, `dp`, `tg`, `plan`, `setP`, `purgeFuture`, `migrateWeekly`, `vPlan`, `planClick`, `planChange`, `legacyPlan`, `freezeSync` | Calendar, per-date editor, targets that start from a date. `legacyPlan`, `freezeSync` and `migrateWeekly` only run once to convert old weekday plans. |
 | College | `CDEF`, `sub`, `sylP`, `asgLeft`, `planSum`, `vCollege`, `cMain`, `cSem`, `cSub`, `colClick`, `colChange` | Semesters, subjects, syllabus, assignments, backlog, PDF upload (study plans are made on the Plan page) |
-| Self | `SDEF`, `tp`, `selfDates`, `planDays`, `selfPlan`, `selfTile`, `vSelf`, `sMain`, `sTop`, `selfClick`, `selfChange` | Topics, planned dates, resources, missed-notes, today's growth ticks, button to Money |
-| Books (inside the Book reading topic) | `BDEF`, `saveBooks`, `isBook`, `pgSum`, `pgDay`, `bookRead`, `vBooks` | Books with pages, pages read per date, finish-by date, day/month/year goals and history |
-| Collapsible boxes | `acc`, `UI`, the `tgl` click action | Every box on Health, College and Plan is a collapsible box, closed by default. Open or closed is remembered in the browser only (`lt:ui`), not in the database. To make a new box collapsible, wrap it: `acc('unique-id','Title','short summary',bodyHtml)`. |
+| Self | `SDEF`, `tp`, `selfDates`, `planDays`, `selfPlan`, `selfTile`, `vSelf`, `sMain`, `sTop`, `selfClick`, `selfChange` | Topics, planned dates, resources, missed-notes, today's growth ticks. Under each planned topic in the growth list there is a small "Resources n · Notes n" line. It is closed by default; tap it to see the resources and the uncovered notes (which can be ticked there). Open or closed is remembered per topic in the browser. |
+| Collapsible boxes | `acc`, `UI`, the `tgl` click action | Every box on Health, College (Assignments left, Backlogs to pass, Semesters), Self (Topics), Plan and Money is a collapsible box, closed by default. Open or closed is remembered in the browser only (`lt:ui`), not in the database. To make a new box collapsible, wrap it: `acc('unique-id','Title','short summary',bodyHtml)`. |
 | Stats | `vStats` | Week, month and year views |
-| Money | `vMoney`, `sum` | Income, spending, budget |
+| Money | `vMoney`, `sum`, `moneyBal`, `fmtC` | Its own section (home box and bottom tab): income, spending, budget, categories, entries |
 | App core | `render`, the `click` and `change` listeners, the boot function at the bottom | Draws the current screen and handles every button |
 
 Buttons use `data-act="name"`. The click listener calls the matching code. To add a button, give it a `data-act` and handle it in `colClick`, `colChange` or the main listeners.
@@ -116,7 +115,6 @@ There are no weekly templates any more. Every plan belongs to a calendar date, s
 
 **Rule for new features:** if a feature compares progress against a plan or target, read it through `plan(date)` and add the needed field to the plan object in `plan()` and in the Plan page. Never use old weekday fields.
 
-Reading progress works differently: pages are saved per date in `books.log`, so it never depends on a plan.
 
 ## 6. Adding a feature: how the Self section was added (repeat these steps for the next feature)
 

@@ -56,8 +56,8 @@ h3,h2{font-weight:700;letter-spacing:.18em}
 .btn{display:inline-block;background:rgba(20,45,105,.6);border:1px solid var(--bd);padding:8px 12px;cursor:pointer;margin-top:6px}
 select{min-width:0}a{text-decoration:none}
 nav button{font-size:13px;padding:10px 2px}
-.tiles{grid-template-columns:repeat(4,1fr)!important;gap:6px}
-.tile{padding:8px 3px}.tile h2{font-size:10px;letter-spacing:.08em}.tile .pc{font-size:17px}.tile small{font-size:10px}
+.tiles{grid-template-columns:repeat(5,1fr)!important;gap:6px}
+.tile{padding:8px 3px}.tile h2{font-size:10px;letter-spacing:.08em}.tile .pc{font-size:15px;white-space:nowrap}.tile small{font-size:10px}
 nav button{font-size:11px;padding:10px 0;letter-spacing:0}
 .sys{overflow:hidden}
 .sysrow{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}.sysl{flex:1;min-width:150px}
@@ -78,6 +78,10 @@ nav button{font-size:11px;padding:10px 0;letter-spacing:0}
 .acch .sm{margin-left:auto;color:var(--mu);font-size:13px;text-align:right}
 .acch .ar{color:var(--ok);width:14px;text-align:center}
 .accb{margin-top:10px}
+.sub{margin:0 0 8px 30px;padding:2px 0 2px 10px;border-left:2px solid rgba(70,140,255,.3)}
+.rl{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 6px}.rl a,.rl span{border:1px solid var(--bd);padding:2px 8px;font-size:13px;color:var(--ok)}.rl span{color:var(--mu)}
+.nrow{padding:4px 0;border:0;font-size:14px}
+.subt{display:block;background:none;border:0;padding:0 0 8px 30px;font-size:12px;color:var(--mu);cursor:pointer;text-align:left}
 </style></head>
 <body>
 <main id="v"><p class="mu">Loading…</p></main>
@@ -125,7 +129,8 @@ function legacyPlan(d){const s=S.s,k=dk(d),ex=s.ex[k]||[],rest=!ex.length||/^res
 function freezeSync(){const t=iso(new Date());for(const yy in S.days){const all=S.days[yy];let ch=false;for(const d in all)if(d<t&&!all[d].fz){all[d].fz=legacyPlan(d);ch=true}if(ch)saveDays(yy)}}
 function items(d){const P=plan(d);return[{k:'wake'},{k:'sleep'},...P.ex.map(t=>({k:'e:'+t})),...P.fd.map(t=>({k:'f:'+t}))]}
 function pct(d){const x=day(d),dn=x.done||{},it=items(d),P=plan(d);return Math.round(100*(it.filter(i=>dn[i.k]).length+((x.water||0)>=P.wmin?1:0))/(it.length+1))}
-function streak(){let d=cur,n=0;if(pct(d)<80)d=addD(d,-1);while(n<400&&pct(d)>=80){n++;d=addD(d,-1)}return n}
+const STREAK_AT=75;
+function streak(){let d=cur,n=0;if(pct(d)<STREAK_AT)d=addD(d,-1);while(n<400&&pct(d)>=STREAK_AT){n++;d=addD(d,-1)}return n}
 function xp(){let x=0;for(const y in S.days)for(const d in S.days[y]){const o=S.days[y][d];x+=(Object.values(o.done||{}).filter(Boolean).length+Object.values(o.sdone||{}).filter(Boolean).length+Object.values(o.pdone||{}).filter(Boolean).length)*10;if((o.water||0)>=plan(d).wmin)x+=10}return x}
 const sum=(it,t)=>it.filter(i=>i.t==t).reduce((a,i)=>a+i.a,0);
 
@@ -152,7 +157,8 @@ function vHome(){const p=pct(cur),x=day(cur),pl=plan(cur),td=pl.td,tn=x.tdone||{
   <button class="tile" data-act="go" data-t="health"><div class="ic">❤️</div><h2>Health</h2><div class="pc">${p}%</div><small>${+(x.water||0).toFixed(1)}/${pl.wmax} L</small></button>
   <button class="tile" data-act="go" data-t="college">${colTile()}</button>
   <button class="tile" data-act="go" data-t="self">${selfTile()}</button>
-  <button class="tile" data-act="go" data-t="plan"><div class="ic">🗓️</div><h2>Plan</h2><div class="pc">${plannedAhead()}</div><small>days ahead</small></button></div>`
+  <button class="tile" data-act="go" data-t="plan"><div class="ic">🗓️</div><h2>Plan</h2><div class="pc">${plannedAhead()}</div><small>days ahead</small></button>
+  <button class="tile" data-act="go" data-t="money"><div class="ic">💰</div><h2>Money</h2><div class="pc">${fmtC(moneyBal(cur.slice(0,7)))}</div><small>this month</small></button></div>`
   +(td.length?`<div class="card" style="margin-top:12px"><h3>Tasks · ${dlabel(cur)}</h3>${td.map(t=>`<label class="row"><input type="checkbox" data-act="tkd" data-t="${esc(t)}" ${tn[t]?'checked':''}><span class="${tn[t]?'dn':''}">${esc(t)}</span></label>`).join('')}</div>`:'')}
 
 function vHealth(){const x=day(cur),s=plan(cur),dn=x.done||{},p=pct(cur),w=x.water||0,
@@ -178,17 +184,19 @@ function vStats(){let h=`<div class="seg">${['week','month','year'].map(r=>`<but
     h+=`<div class="card"><h3>${y} · average score by month</h3><div class="cols" style="gap:3px">${cols}</div></div>`}
   return h}
 
+const fmtC=n=>{const a=Math.abs(n),g=n<0?'-':'';return a>=100000?g+'₹'+(a/100000).toFixed(a>=1000000?0:1)+'L':a>=1000?g+'₹'+(a/1000).toFixed(a>=10000?0:1)+'k':g+'₹'+Math.round(a)};
+const moneyBal=m=>{const it=S.money[m]||[];return sum(it,'in')-sum(it,'out')};
 function vMoney(){const it=S.money[mon]||[],s=S.s,inc=sum(it,'in'),out=sum(it,'out'),cats={};
   it.filter(i=>i.t=='out').forEach(i=>cats[i.c||'other']=(cats[i.c||'other']||0)+i.a);
   const cl=Object.entries(cats).sort((a,b)=>b[1]-a[1]),dd=cur.startsWith(mon)?cur:mon+'-01';
   return `<div class="hd"><button data-act="mnav" data-s="-1">‹</button><b>${parse(mon+'-01').toLocaleDateString('en',{month:'long',year:'numeric'})}</b><button data-act="mnav" data-s="1">›</button></div>
-  <div class="card grid" style="grid-template-columns:repeat(3,1fr)"><div><b class="in">${fmt(inc)}</b><small>in</small></div><div><b class="out">${fmt(out)}</b><small>spent</small></div><div><b>${fmt(inc-out)}</b><small>balance</small></div></div>
-  <div class="card"><div class="row" style="border:0;padding-top:0"><span>Monthly budget (₹)</span><input data-act="cfg" data-k="budget" type="number" value="${s.budget}" style="width:110px"></div>${s.budget>0?`<div class="bar"><i style="width:${Math.min(100,Math.round(100*out/s.budget))}%;${out>s.budget?'background:var(--bad)':''}"></i></div><small>${fmt(out)} of ${fmt(s.budget)}</small>`:''}</div>
-  <div class="card"><h3>Add entry</h3><div class="f"><select id="tt"><option value="out">Spent</option><option value="in">Received</option></select><input id="ta" type="number" inputmode="decimal" placeholder="Amount"><input id="tc" list="cl" placeholder="Category"><input id="td" type="date" value="${dd}"><input id="tn" class="w" placeholder="Note (optional)"><button class="pri w" data-act="addtx">Add</button></div>
-  <datalist id="cl"><option>Food</option><option>Travel</option><option>Bills</option><option>Study</option><option>Shopping</option><option>Salary</option></datalist></div>
-  ${cl.length?`<div class="card"><h3>Where it went</h3>${cl.map(([k,v])=>`<div class="row" style="border:0;padding:4px 0"><span>${esc(k)}</span><span class="mu">${fmt(v)}</span></div>`).join('')}</div>`:''}
-  <div class="card"><h3>Entries</h3>${[...it].sort((a,b)=>b.d.localeCompare(a.d)).map(i=>`<div class="row"><span><b class="${i.t}">${i.t=='in'?'+':'−'}${fmt(i.a)}</b> ${esc(i.c||'')}<small>${i.d} ${esc(i.n||'')}</small></span><button data-act="deltx" data-id="${i.id}">✕</button></div>`).join('')||'<p class="mu">Nothing yet.</p>'}</div>
-  <p class="mu" style="font-size:13px">${store?'Saved to your local server.':'Server not reachable. Saved in this browser only.'}</p>`}
+  <div class="card grid" style="grid-template-columns:repeat(3,1fr)"><div><b class="in">${fmt(inc)}</b><small>in</small></div><div><b class="out">${fmt(out)}</b><small>spent</small></div><div><b>${fmt(inc-out)}</b><small>balance</small></div></div>`
+  +acc('m-budget','Budget',s.budget>0?`${fmt(out)} / ${fmt(s.budget)}`:'not set',`<div class="row" style="border:0;padding-top:0"><span>Monthly budget (₹)</span><input data-act="cfg" data-k="budget" type="number" value="${s.budget}" style="width:110px"></div>${s.budget>0?`<div class="bar"><i style="width:${Math.min(100,Math.round(100*out/s.budget))}%;${out>s.budget?'background:var(--bad)':''}"></i></div><small>${fmt(out)} of ${fmt(s.budget)}</small>`:''}`)
+  +acc('m-add','Add entry','',`<div class="f"><select id="tt"><option value="out">Spent</option><option value="in">Received</option></select><input id="ta" type="number" inputmode="decimal" placeholder="Amount"><input id="tc" list="cl" placeholder="Category"><input id="td" type="date" value="${dd}"><input id="tn" class="w" placeholder="Note (optional)"><button class="pri w" data-act="addtx">Add</button></div>
+  <datalist id="cl"><option>Food</option><option>Travel</option><option>Bills</option><option>Study</option><option>Shopping</option><option>Salary</option></datalist>`)
+  +acc('m-cat','Where it went',cl.length?`${esc(cl[0][0])} ${fmt(cl[0][1])}`:'nothing yet',cl.map(([k,v])=>`<div class="row" style="border:0;padding:4px 0"><span>${esc(k)}</span><span class="mu">${fmt(v)}</span></div>`).join('')||'<p class="mu" style="margin:0">Nothing spent yet.</p>')
+  +acc('m-list','Entries',it.length+' entries',[...it].sort((a,b)=>b.d.localeCompare(a.d)).map(i=>`<div class="row"><span><b class="${i.t}">${i.t=='in'?'+':'−'}${fmt(i.a)}</b> ${esc(i.c||'')}<small>${i.d} ${esc(i.n||'')}</small></span><button data-act="deltx" data-id="${i.id}">✕</button></div>`).join('')||'<p class="mu" style="margin:0">Nothing yet.</p>')
+  +`<p class="mu" style="font-size:13px">${store?'Saved to your local server.':'Server not reachable. Saved in this browser only.'}</p>`}
 
 /* ---- college ---- */
 let cv='main',selSem=null,selSub=null,armed=null,A=null,busy='',err='';
@@ -210,7 +218,7 @@ function cMain(){const c=S.c,p=planSum(cur),left=c.subs.filter(u=>u.bl!=2&&asgLe
   <button data-act="pedit" data-d="${cur}" style="width:100%;margin-top:8px">Plan study for this date</button></div>`
   +acc('c-asg','Assignments left',left.length?`${left.length} subjects · ${left.reduce((a,u)=>a+asgLeft(u),0)} left`:'none',left.map(u=>`<div class="row"><span>${esc(u.n)}<small>${esc(semName(u.sem))}</small></span><button data-act="osub" data-id="${u.id}">${asgLeft(u)} left</button></div>`).join('')||'<p class="mu" style="margin:0">Nothing pending.</p>')
   +acc('c-bl','Backlogs to pass',bls.length?bls.length+' pending':'none',bls.map(u=>`<div class="row"><span>${esc(u.n)}<small>${esc(semName(u.sem))} · syllabus ${sylP(u)}%</small></span><button data-act="osub" data-id="${u.id}">Open</button></div>`).join('')||'<p class="mu" style="margin:0">No backlogs. Mark a subject as Backlog pending inside it.</p>')
-  +`  <div class="card"><h3>Semesters</h3>${c.sems.map(m=>`<div class="row"><button data-act="osem" data-id="${m.id}" style="flex:1;text-align:left">${esc(m.name)}</button><small>${c.subs.filter(u=>u.sem==m.id).length} subjects</small></div>`).join('')}<div class="row"><input id="ns" placeholder="Add semester (e.g. Sem 5)" style="flex:1"><button class="pri" data-act="addsem">Add</button></div></div>`}
+  +acc('c-sem','Semesters',c.sems.length+' semesters',`${c.sems.map(m=>`<div class="row"><button data-act="osem" data-id="${m.id}" style="flex:1;text-align:left">${esc(m.name)}</button><small>${c.subs.filter(u=>u.sem==m.id).length} subjects</small></div>`).join('')}<div class="row"><input id="ns" placeholder="Add semester (e.g. Sem 5)" style="flex:1"><button class="pri" data-act="addsem">Add</button></div>`)}
 function cSem(){const m=S.c.sems.find(x=>x.id==selSem);if(!m){cv='main';return cMain()}
   const us=S.c.subs.filter(u=>u.sem==m.id);
   return hdr('main',esc(m.name))+`<div class="card"><h3>Subjects</h3>${us.map(u=>`<div class="row"><button data-act="osub" data-id="${u.id}" style="flex:1;text-align:left">${esc(u.n)}${u.bl==1?' ⚠':''}</button><small style="text-align:right">Syllabus ${sylP(u)}%<br>${asgLeft(u)} assignments left</small></div>`).join('')||'<p class="mu" style="margin:0">No subjects yet.</p>'}
@@ -259,13 +267,12 @@ function selfTile(){const p=selfPlan(cur);return `<div class="ic">🧠</div><h2>
 function vSelf(){return(sv=='topic'?sTop:sMain)()}
 function sMain(){const f=S.f,p=selfPlan(cur);
   return `<div class="card"><small>SELF · GROWTH QUEST</small><div class="big">${p.d}/${p.t}h</div><div class="bar"><i style="width:${p.t?Math.round(100*p.d/p.t):0}%"></i></div>
-  ${p.it.map(i=>`<label class="row"><input type="checkbox" data-act="spd" data-id="${i.id}" ${p.dn[i.id]?'checked':''}><span class="${p.dn[i.id]?'dn':''}">${esc(i.n)} · ${i.h}h${i.at?' · '+tm(i.at):''}</span></label>`).join('')||'<p class="mu" style="margin:0">Nothing scheduled today.</p>'}</div>
-  <button class="pri" style="width:100%;margin-bottom:12px" data-act="go" data-t="money">💰 Money tracker</button>
-  <div class="card"><h3>Topics</h3>${f.topics.map(x=>`<div class="row"><button data-act="otp" data-id="${x.id}" style="flex:1;text-align:left">${esc(x.n)}</button><small style="text-align:right">${planDays(x)} days planned<br>${(x.notes||[]).filter(n=>!n.d).length} to cover</small></div>`).join('')}<div class="row"><input id="ntp" placeholder="Add topic" style="flex:1"><button class="pri" data-act="addtp">Add</button></div></div>`}
+  ${p.it.map(i=>{const x=tp(i.id)||{},rs=x.res||[],ns=(x.notes||[]).filter(n=>!n.d);return `<label class="row"><input type="checkbox" data-act="spd" data-id="${i.id}" ${p.dn[i.id]?'checked':''}><span class="${p.dn[i.id]?'dn':''}">${esc(i.n)} · ${i.h}h${i.at?' · '+tm(i.at):''}</span></label>`+(rs.length||ns.length?`<button class="subt" data-act="tgl" data-id="sx-${i.id}">${UI['sx-'+i.id]?'▾':'▸'} Resources ${rs.length} · Notes ${ns.length}</button>`+(UI['sx-'+i.id]?`<div class="sub">${rs.length?`<small>Resources</small><div class="rl">${rs.map(r=>r.u?`<a href="${esc(r.u)}" target="_blank" rel="noopener">${esc(r.t)}</a>`:`<span>${esc(r.t)}</span>`).join('')}</div>`:''}${ns.length?`<small>What I missed (tick when covered)</small>${ns.map(n=>`<label class="row nrow"><input type="checkbox" data-act="ntg" data-tp="${x.id}" data-id="${n.id}"><span>${esc(n.t)}</span></label>`).join('')}`:''}</div>`:''):'')}).join('')||'<p class="mu" style="margin:0">Nothing scheduled today.</p>'}</div>`
+  +acc('s-topics','Topics',f.topics.length+' topics',`${f.topics.map(x=>`<div class="row"><button data-act="otp" data-id="${x.id}" style="flex:1;text-align:left">${esc(x.n)}</button><small style="text-align:right">${planDays(x)} days planned<br>${(x.notes||[]).filter(n=>!n.d).length} to cover</small></div>`).join('')}<div class="row"><input id="ntp" placeholder="Add topic" style="flex:1"><button class="pri" data-act="addtp">Add</button></div>`)}
 function sTop(){const x=tp(selTop);if(!x){sv='main';return sMain()}
   x.sch=x.sch||{};x.res=x.res||[];x.notes=x.notes||[];
   return `<div class="hd"><button data-act="sgo">‹ Back</button><b>${esc(x.n)}</b><span style="width:60px"></span></div>
-  ${isBook(x)?vBooks():''}<div class="card"><h3>Planned dates</h3>${selfDates(x.id).slice(0,10).map(([d,i])=>`<div class="row"><span>${dlabel(d)}</span><span class="mu">${i.h}h${i.at?' · '+tm(i.at):''}</span></div>`).join('')||'<p class="mu" style="margin:0">No dates planned yet.</p>'}<button data-act="pedit" data-d="${cur}" style="width:100%;margin-top:6px">Plan dates</button></div>
+  <div class="card"><h3>Planned dates</h3>${selfDates(x.id).slice(0,10).map(([d,i])=>`<div class="row"><span>${dlabel(d)}</span><span class="mu">${i.h}h${i.at?' · '+tm(i.at):''}</span></div>`).join('')||'<p class="mu" style="margin:0">No dates planned yet.</p>'}<button data-act="pedit" data-d="${cur}" style="width:100%;margin-top:6px">Plan dates</button></div>
   <div class="card"><h3>Resources</h3>${x.res.map(r=>`<div class="row"><span style="flex:1;word-break:break-word">${r.u?`<a href="${esc(r.u)}" target="_blank" rel="noopener" style="color:var(--ok)">${esc(r.t)}</a>`:esc(r.t)}</span><button data-act="delres" data-id="${r.id}">✕</button></div>`).join('')||'<p class="mu" style="margin:0">No resources yet.</p>'}
   <div class="f" style="margin-top:8px"><input id="rt" placeholder="Name (book, course, video)"><input id="ru" placeholder="Link (optional)"><button class="pri w" data-act="addres">Add resource</button></div></div>
   <div class="card"><h3>Notes · what I missed</h3>${[...x.notes].reverse().map(n=>`<div class="row"><label style="display:flex;gap:10px;align-items:flex-start;flex:1"><input type="checkbox" data-act="ntg" data-id="${n.id}" ${n.d?'checked':''}><span class="${n.d?'dn':''}" style="white-space:pre-wrap">${esc(n.t)}<small>${n.dt||''}</small></span></label><button data-act="delnote" data-id="${n.id}">✕</button></div>`).join('')||'<p class="mu" style="margin:0">Nothing missed yet.</p>'}
@@ -279,51 +286,14 @@ function selfClick(b,a){const f=S.f,d=b.dataset;
   else if(a=='delres'){const x=tp(selTop);x.res=x.res.filter(r=>r.id!=d.id);saveSelf()}
   else if(a=='addnote'){const x=tp(selTop),t=$('#nn').value.trim();if(t){x.notes.push({id:uid0(),t,d:false,dt:iso(new Date())});saveSelf()}}
   else if(a=='delnote'){const x=tp(selTop);x.notes=x.notes.filter(n=>n.id!=d.id);saveSelf()}
-  else if(a=='addbk'){const t=$('#bt').value.trim(),n=parseInt($('#bp').value);if(t&&n>0){S.b.list.push({id:uid0(),t,pages:n,dl:$('#bd').value||''});saveBooks()}}
-  else if(a=='delbk'){if(arm('bk'+d.id)){S.b.list=S.b.list.filter(k=>k.id!=d.id);saveBooks()}}
-  else if(a=='bhist')bh=d.v;
-  else if(a=='bmnav')bm=shiftMon(bm,+d.s);
   else if(a=='deltp'){if(arm('tp'+selTop)){purgeFuture('self',selTop);f.topics=f.topics.filter(x=>x.id!=selTop);saveSelf();sv='main'}}
   else return false;
   return true}
 function selfChange(t,a){const d=t.dataset;
   if(a=='spd'){const dn=Object.assign({},day(cur).pdone||{});dn[d.id]=t.checked;setDay(cur,{pdone:dn})}
-  else if(a=='bpg'){const n=Math.max(0,parseInt(t.value)||0),l=S.b.log;l[cur]=l[cur]||{};if(n)l[cur][d.id]=n;else delete l[cur][d.id];if(!Object.keys(l[cur]).length)delete l[cur];saveBooks()}
-  else if(a=='bdl'){S.b.list.find(k=>k.id==d.id).dl=t.value;saveBooks()}
-  else if(a=='bdate'){if(t.value){cur=t.value;bm=cur.slice(0,7)}}
-  else if(a=='bgoal'){S.b.goal[d.k]=Math.max(0,parseInt(t.value)||0);saveBooks()}
-  else if(a=='ntg'){tp(selTop).notes.find(n=>n.id==d.id).d=t.checked;saveSelf()}
+  else if(a=='ntg'){tp(d.tp||selTop).notes.find(n=>n.id==d.id).d=t.checked;saveSelf()}
   else return false;
   return true}
-
-/* ---- books: dated reading log (never tied to the weekly routine) ---- */
-let bm=cur.slice(0,7),bh='month';
-const BDEF=()=>({list:[],log:{},goal:{d:0,m:0,y:0}});
-const saveBooks=()=>save('books',S.b);
-const isBook=x=>x.id=='t1'||/book/i.test(x.n);
-const pgSum=(pre,id)=>{let n=0;for(const d in S.b.log)if(d.startsWith(pre))n+=id?(S.b.log[d][id]||0):Object.values(S.b.log[d]).reduce((a,v)=>a+v,0);return n};
-const pgDay=(d,id)=>(S.b.log[d]||{})[id]||0;
-const bookRead=k=>pgSum('',k.id);
-function vBooks(){const b=S.b,g=b.goal,y=bm.slice(0,4);
-  const gl=(l,v,t)=>`<div class="row" style="border:0;padding:4px 0"><span>${l}</span><span class="mu">${v}${t>0?' / '+t:''} pages</span></div>${t>0?`<div class="bar" style="margin:0"><i style="width:${Math.min(100,Math.round(100*v/t))}%"></i></div>`:''}`;
-  const gi=(l,k)=>`<div class="row"><span>${l}</span><input type="number" min="0" value="${g[k]||''}" placeholder="off" data-act="bgoal" data-k="${k}" style="width:90px"></div>`;
-  const books=b.list.map(k=>{const r=bookRead(k),left=Math.max(0,k.pages-r),pc=k.pages?Math.min(100,Math.round(100*r/k.pages)):0,done=k.pages>0&&r>=k.pages,dl=k.dl?Math.round((parse(k.dl)-parse(cur))/864e5)+1:0,need=(!done&&dl>0)?Math.ceil(left/dl):0;
-    return `<div style="padding:10px 0;border-bottom:1px solid rgba(70,140,255,.15)"><div class="row" style="border:0;padding:0"><b class="${done?'dn':''}">${esc(k.t)}</b><button data-act="delbk" data-id="${k.id}">${armed=='bk'+k.id?'Sure?':'✕'}</button></div>
-    <div class="bar"><i style="width:${pc}%"></i></div><small>${r} / ${k.pages} pages · ${pc}%${done?' · finished':' · '+left+' left'}${k.dl&&!done?(dl>0?' · due '+k.dl+' · read '+need+'/day':' · overdue ('+k.dl+')'):''}</small>
-    <div class="row" style="border:0;padding:6px 0 0"><span class="mu">Pages read on ${cur}</span><input type="number" min="0" value="${pgDay(cur,k.id)||''}" placeholder="0" data-act="bpg" data-id="${k.id}" style="width:90px"></div>
-    <div class="row" style="border:0;padding:0"><span class="mu">Finish by</span><input type="date" value="${k.dl||''}" data-act="bdl" data-id="${k.id}"></div></div>`}).join('')||'<p class="mu" style="margin:0">No books yet.</p>';
-  let hist;
-  if(bh=='month'){const f=parse(bm+'-01'),n=new Date(f.getFullYear(),f.getMonth()+1,0).getDate(),off=(f.getDay()+6)%7;let c='',mx=1;
-    for(let i=1;i<=n;i++)mx=Math.max(mx,pgSum(bm+'-'+String(i).padStart(2,'0')));
-    ['M','T','W','T','F','S','S'].forEach(w=>c+=`<div class="h">${w}</div>`);for(let i=0;i<off;i++)c+='<div class="h"></div>';
-    for(let i=1;i<=n;i++){const v=pgSum(bm+'-'+String(i).padStart(2,'0'));c+=`<div style="flex-direction:column;line-height:1.1;background:color-mix(in srgb,#38d6ff ${Math.round(100*v/mx)}%,rgba(80,130,230,.15))"><span>${i}</span><span style="font-size:10px">${v||''}</span></div>`}
-    hist=`<div class="hd"><button data-act="bmnav" data-s="-1">‹</button><b>${f.toLocaleDateString('en',{month:'long',year:'numeric'})} · ${pgSum(bm)} pages</b><button data-act="bmnav" data-s="1">›</button></div><div class="cal">${c}</div>`}
-  else{let mx=1;const ms=[...Array(12)].map((_,i)=>{const v=pgSum(y+'-'+String(i+1).padStart(2,'0'));mx=Math.max(mx,v);return v});
-    hist=`<div class="hd"><button data-act="bmnav" data-s="-12">‹</button><b>${y} · ${pgSum(y)} pages</b><button data-act="bmnav" data-s="12">›</button></div><div class="cols" style="gap:3px">${ms.map((v,i)=>`<div class="col"><small>${v||''}</small><div class="cb"><i style="height:${Math.round(100*v/mx)}%"></i></div><small>${new Date(2000,i,1).toLocaleDateString('en',{month:'narrow'})}</small></div>`).join('')}</div>`}
-  return `<div class="card"><h3>Books</h3><div class="row" style="border:0;padding-top:0"><span class="mu">Date</span><input type="date" value="${cur}" data-act="bdate"></div>${gl('That day',pgSum(cur),g.d)}${gl('That month',pgSum(cur.slice(0,7)),g.m)}${gl('That year',pgSum(cur.slice(0,4)),g.y)}</div>
-  <div class="card"><h3>Your books</h3>${books}<div class="f" style="margin-top:10px"><input id="bt" placeholder="Book name"><input id="bp" type="number" min="1" placeholder="Total pages"><input id="bd" type="date" class="w"><small class="w">Finish by (optional)</small><button class="pri w" data-act="addbk">Add book</button></div></div>
-  <div class="card"><h3>Reading goals (pages)</h3>${gi('Per day','d')}${gi('Per month','m')}${gi('Per year','y')}</div>
-  <div class="card"><h3>Reading history</h3><div class="seg">${['month','year'].map(r=>`<button data-act="bhist" data-v="${r}" class="${bh==r?'on':''}">${r}</button>`).join('')}</div>${hist}</div>`}
 
 /* ---- collapsible boxes (closed by default, remembered in this browser) ---- */
 let UI={};try{UI=JSON.parse(localStorage.getItem('lt:ui')||'{}')}catch(e){}
@@ -421,6 +391,6 @@ document.addEventListener('change',e=>{
   else if(a=='cfg'){const k=t.dataset.k;S.s[k]=(k=='wake'||k=='sleep')?(t.value||S.s[k]):Math.max(0,parseFloat(t.value)||0);if(S.s.wmax<S.s.wmin)S.s.wmax=S.s.wmin;saveSet();if(k=='budget')return render()}
   if(a!='cfg')render()});
 
-(async()=>{await init();S.s=Object.assign(DEF(),await load('health',{}));S.c=Object.assign(CDEF(),await load('college',{}));S.f=Object.assign(SDEF(),await load('self',{}));S.b=Object.assign(BDEF(),await load('books',{}));const y0=+cur.slice(0,4);for(let i=y0-5;i<=y0;i++)await ensureYear(String(i));for(let i=y0-5;i<=y0+2;i++)await ensurePlans(String(i));if(!S.s.mig){freezeSync();migrateWeekly()}await render();lvCheck()})();
+(async()=>{await init();S.s=Object.assign(DEF(),await load('health',{}));S.c=Object.assign(CDEF(),await load('college',{}));S.f=Object.assign(SDEF(),await load('self',{}));const y0=+cur.slice(0,4);for(let i=y0-5;i<=y0;i++)await ensureYear(String(i));for(let i=y0-5;i<=y0+2;i++)await ensurePlans(String(i));if(!S.s.mig){freezeSync();migrateWeekly()}await render();lvCheck()})();
 </script>
 </body></html>
