@@ -99,6 +99,16 @@ nav button{font-size:11px;padding:10px 0;letter-spacing:0}
 .accb .card{border:0;box-shadow:none;background:none;padding:0;margin:0 0 10px}.accb .card::before,.accb .card::after{display:none}
 .cb.mb{gap:2px;padding:0 1px}.cb.mb i{width:auto;flex:1}
 .mb .mi{background:linear-gradient(0deg,#0e7490,#38d6ff)}.mb .mo{background:linear-gradient(0deg,#be123c,#ff5d7a)}
+
+/* ---- home: boxes stay fixed, only the notice messages scroll ---- */
+.homewrap{display:flex;flex-direction:column;height:calc(100vh - 104px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));height:calc(100dvh - 104px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));overflow-y:auto;scrollbar-width:none}
+.homewrap::-webkit-scrollbar,.feedl::-webkit-scrollbar{display:none}
+.homefix{flex:none}
+.feed{flex:1 1 0;min-height:170px;display:flex;flex-direction:column;margin-top:10px}
+.feedl{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:16px 0 26px 8px;
+ -webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 16px,#000 calc(100% - 28px),transparent 100%);
+ mask-image:linear-gradient(to bottom,transparent 0,#000 16px,#000 calc(100% - 28px),transparent 100%)}
+.feedh{margin-bottom:0;flex:none}
 </style></head>
 <body>
 <main id="v"><p class="mu">Loading…</p></main>
@@ -170,13 +180,13 @@ function lvCheck(){const lv=Math.floor(xp()/200)+1;let o=0;try{o=+localStorage.g
   if(o&&lv>o){const e=$('#lvup');e.innerHTML='LEVEL UP!<small style="font-size:16px;letter-spacing:.2em">LEVEL '+lv+'</small>';e.classList.add('on');setTimeout(()=>e.classList.remove('on'),2800)}}
 function plannedAhead(){const t=iso(new Date());let n=0;for(const y in S.p)for(const d in S.p[y])if(d>=t&&hasP(S.p[y][d]))n++;return n}
 function vHome(){const p=pct(cur),x=day(cur),pl=plan(cur),td=pl.td,tn=x.tdone||{};
-  return statusBox()+`<div class="tiles">
+  return '<div class="homewrap"><div class="homefix">'+statusBox()+`<div class="tiles">
   <button class="tile" data-act="go" data-t="health"><div class="ic">❤️</div><h2>Health</h2><div class="pc">${p}%</div><small>${+(x.water||0).toFixed(1)}/${pl.wmax} L</small></button>
   <button class="tile" data-act="go" data-t="college">${colTile()}</button>
   <button class="tile" data-act="go" data-t="self">${selfTile()}</button>
   <button class="tile" data-act="go" data-t="plan"><div class="ic">🗓️</div><h2>Plan</h2><div class="pc">${plannedAhead()}</div><small>days ahead</small></button>
   <button class="tile" data-act="go" data-t="money"><div class="ic">💰</div><h2>Money</h2><div class="pc">${fmtC(moneyBal(cur.slice(0,7)))}</div><small>${moneyLeft()}</small></button></div>`
-  +(td.length?`<div class="card" style="margin-top:12px"><h3>Tasks · ${dlabel(cur)}</h3>${td.map(t=>`<label class="row"><input type="checkbox" data-act="tkd" data-t="${esc(t)}" ${tn[t]?'checked':''}><span class="${tn[t]?'dn':''}">${esc(t)}</span></label>`).join('')}</div>`:'')+homeFeed()}
+  +(td.length?`<div class="card" style="margin-top:12px"><h3>Tasks · ${dlabel(cur)}</h3>${td.map(t=>`<label class="row"><input type="checkbox" data-act="tkd" data-t="${esc(t)}" ${tn[t]?'checked':''}><span class="${tn[t]?'dn':''}">${esc(t)}</span></label>`).join('')}</div>`:'')+'</div>'+homeFeed()+'</div>'}
 
 /* ---- home: remaining-task reminders (messages, not boxes) ---- */
 let fa=true;
@@ -193,8 +203,8 @@ function homeFeed(){const x=day(cur),dn=x.done||{},P=plan(cur),L=[],add=(g,t)=>L
   const se=selfPlan(cur);se.it.filter(i=>!se.dn[i.id]).forEach(i=>add('self',i.n+' · '+i.h+'h'+(i.at?' at '+tm(i.at):'')));
   S.f.topics.forEach(t=>{const n=(t.notes||[]).filter(z=>!z.d).length;if(n)add('self','Revise · '+t.n+' · '+n+' missed note'+(n>1?'s':''))});
   const tag={health:'HEALTH',college:'COLLEGE',self:'SELF'},an=fa;fa=false;
-  return `<div class="feed"><div class="feedh">System notice · ${L.length?L.length+' pending':'all clear'}</div>`
-  +(L.length?L.map((m,i)=>`<button class="msg ${m.g}${an?' an':''}" data-act="go" data-t="${m.g}" style="animation-delay:${Math.min(i,14)*45}ms"><span class="tg">${tag[m.g]}</span><span class="tx">${esc(m.t)}</span></button>`).join(''):`<div class="msg ok${an?' an':''}"><span class="tg">CLEAR</span><span class="tx">Nothing pending. Rest well.</span></div>`)+`</div>`}
+  return `<div class="feed"><div class="feedh">System notice · ${L.length?L.length+' pending':'all clear'}</div><div class="feedl">`
+  +(L.length?L.map((m,i)=>`<button class="msg ${m.g}${an?' an':''}" data-act="go" data-t="${m.g}" style="animation-delay:${Math.min(i,14)*45}ms"><span class="tg">${tag[m.g]}</span><span class="tx">${esc(m.t)}</span></button>`).join(''):`<div class="msg ok${an?' an':''}"><span class="tg">CLEAR</span><span class="tx">Nothing pending. Rest well.</span></div>`)+`</div></div>`}
 
 function vHealth(){const x=day(cur),s=plan(cur),dn=x.done||{},p=pct(cur),w=x.water||0,
   nd=(a,pre)=>a.filter(t=>dn[pre+t]).length;
@@ -443,7 +453,8 @@ async function render(){
   const nm={home:'Home',health:'Health',college:'College',self:'Self',plan:'Plan',stats:'Stats',money:'Money'};
   $('#nav').innerHTML=Object.keys(nm).map(k=>`<button data-act="go" data-t="${k}" class="${tab==k?'on':''}">${nm[k]}</button>`).join('');
   const hd=(tab=='health'||tab=='stats'||(tab=='college'&&cv=='main')||(tab=='self'&&sv=='main'))&&!editing?`<div class="hd"><button data-act="dnav" data-s="-1">‹</button><b>${cur==iso(new Date())?'Today · ':''}${dlabel(cur)}</b><button data-act="dnav" data-s="1">›</button></div>`:'';
-  $('#v').innerHTML=hd+({home:vHome,health:vHealth,college:vCollege,self:vSelf,plan:vPlan,stats:vStats,money:vMoney}[tab])();lvCheck();
+  const fl0=$('.feedl'),sy0=fl0?fl0.scrollTop:0;
+  $('#v').innerHTML=hd+({home:vHome,health:vHealth,college:vCollege,self:vSelf,plan:vPlan,stats:vStats,money:vMoney}[tab])();const fl1=$('.feedl');if(fl1&&sy0)fl1.scrollTop=sy0;lvCheck();
 }
 function capture(){}
 
