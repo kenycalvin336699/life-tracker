@@ -13,8 +13,8 @@ main{max-width:760px;margin:0 auto;padding:12px}
 h3,h2{margin:0 0 8px;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--hi);text-shadow:0 0 10px rgba(80,150,255,.7)}
 .mu,small{color:var(--mu)}small{display:block;font-size:12px}
 .big{font-size:44px;font-weight:800;line-height:1;text-shadow:0 0 16px rgba(80,150,255,.8)}
-.bar{position:relative;height:10px;background:rgba(80,130,230,.18);border-radius:0;margin:8px 0}
-.bar i{display:block;height:100%;background:linear-gradient(90deg,#2563eb,#38d6ff);border-radius:0;box-shadow:0 0 10px #38d6ff;transition:width .25s}
+.bar{position:relative;height:12px;background:rgba(80,130,230,.18);border-radius:999px;margin:8px 0;box-shadow:inset 0 1px 3px rgba(0,0,0,.45)}
+.bar i{display:block;height:100%;background:var(--pg,linear-gradient(90deg,#2563eb,#38d6ff));border-radius:999px;box-shadow:none;transition:width .25s}
 .bar b{position:absolute;top:-3px;bottom:-3px;width:2px;background:#fff;opacity:.7}
 .row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid rgba(70,140,255,.15)}
 .row:last-child{border-bottom:0}
@@ -106,7 +106,7 @@ select{min-width:0}a{text-decoration:none}
  mask-image:linear-gradient(to bottom,transparent 0,#000 16px,#000 calc(100% - 28px),transparent 100%)}
 .feedh{margin-bottom:0;flex:none}
 /* ---- bottom bar with a menu button, and the left slide-in menu ---- */
-.mbtn{flex:none;width:48px;height:42px;display:flex;align-items:center;justify-content:center;padding:0;color:var(--ok);background:rgba(20,45,105,.5);border:1px solid var(--bd)}
+.mbtn,.hbtn{flex:none;width:48px;height:42px;display:flex;align-items:center;justify-content:center;padding:0;color:var(--ok);background:rgba(20,45,105,.5);border:1px solid var(--bd)}
 .bars i{display:block;width:20px;height:2px;margin:4px 0;background:currentColor;box-shadow:0 0 6px currentColor}
 .mcur{font-size:15px;letter-spacing:.16em;text-transform:uppercase;color:var(--hi);text-shadow:0 0 10px rgba(80,150,255,.7)}
 body.menuopen{overflow:hidden}
@@ -157,7 +157,7 @@ body.neo .btn{display:inline-block}
 body.neo button.pri,body.neo .on{background:var(--grey)!important;border-color:transparent!important;color:var(--gtx)!important;box-shadow:none!important}
 body.neo .acch,body.neo .subt,body.neo .msg,body.neo .dit{box-shadow:none;border-radius:0}
 body.neo .acch,body.neo .subt,body.neo .msg{background:none}
-body.neo .mbtn{width:48px;height:42px;border-radius:14px;background:var(--sf);border:0;box-shadow:var(--raise-s);color:var(--tx)}
+body.neo .mbtn,body.neo .hbtn{width:48px;height:42px;border-radius:14px;background:var(--sf);border:0;box-shadow:var(--raise-s);color:var(--tx)}
 body.neo .bars i{box-shadow:none}
 body.neo .hd button{padding:6px 14px}
 /* inputs (embossed / inset) */
@@ -169,9 +169,9 @@ body.neo input[type=checkbox]{-webkit-appearance:none;appearance:none;width:24px
 body.neo input[type=checkbox]:checked{background:var(--grey);box-shadow:var(--raise-s)}
 body.neo input[type=checkbox]:checked::after{content:"";width:6px;height:11px;border:solid #fff;border-width:0 2.5px 2.5px 0;transform:rotate(45deg) translate(-1px,-1px)}
 /* progress = slider (blue track + white knob) */
-body.neo .bar{height:8px;border-radius:999px;background:var(--ins);box-shadow:var(--inset);margin:12px 0}
-body.neo .bar i{position:relative;overflow:visible;border-radius:999px;background:var(--ac);box-shadow:none}
-body.neo .bar i::after,body.neo .xpb i::after{content:"";position:absolute;top:50%;bottom:auto;left:auto;right:-10px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:var(--raise-s);transform:translateY(-50%);animation:none}
+body.neo .bar{height:12px;border-radius:999px;background:var(--ins);box-shadow:var(--inset);margin:10px 0}
+body.neo .bar i{border-radius:999px;background:var(--pg);box-shadow:none}
+body.neo .bar i::after,body.neo .xpb i::after{display:none}
 body.neo .bar b{background:var(--mu);opacity:.8}
 /* charts / calendar */
 body.neo .cb{background:var(--ins);border-radius:12px;box-shadow:var(--inset)}
@@ -200,6 +200,36 @@ body.neo .dit{border-left:0;border-radius:16px;margin:2px 0;color:var(--tx);back
 body.neo .dit.cur{background:var(--grey);color:var(--gtx);text-shadow:none}
 body.neo .dgrp{color:var(--mu)}
 body.neo #lvup{background:var(--glass)!important;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);color:var(--ac);text-shadow:none}
+
+/* ---- linear progress: shared by every bar (labelled rows, tracks, fills) ---- */
+:root{--pg:linear-gradient(90deg,#2563eb,#38d6ff);--pgs:linear-gradient(90deg,#be123c,#ff5d7a)}
+body.neo{--pg:#0f5c5c;--pgs:#d6455d}
+body.neo.dk{--pg:#2fb3a6;--pgs:#ff6b73}
+.lp{margin:0 0 12px}.lp:last-child{margin-bottom:0}
+.lph{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:14px}
+.lph>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lph>b{font-weight:600;white-space:nowrap}.lph em{font-style:normal;color:var(--mu)}
+.lp .bar{margin:5px 0 0}.lp .bar+.bar{margin-top:4px}
+body .bar i.s{background:var(--pgs)}
+.lg{margin:8px 0 0}
+/* ---- money entries: search, filters, grouped list ---- */
+.txs{margin:2px 0 10px}
+.txsum{font-size:12px;color:var(--mu);margin:0 0 8px}
+.txc{display:flex;gap:6px;overflow-x:auto;margin:0 0 10px;padding:2px 2px 6px;scrollbar-width:none}
+.txc::-webkit-scrollbar{display:none}.txc button{flex:none;padding:6px 12px;font-size:14px}
+.txg{margin:0 0 14px}.txg:last-child{margin-bottom:0}
+.txd{display:flex;justify-content:space-between;font-size:13px;color:var(--mu);padding:2px 2px 6px;border-bottom:1px solid var(--bd)}
+.tx{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bd)}
+.txi{flex:none;width:34px;height:34px;display:grid;place-items:center;border-radius:50%;background:rgba(80,130,230,.16);font-size:16px}
+.txm{flex:1;min-width:0;display:flex;flex-direction:column}
+.txm b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.txa{flex:none;white-space:nowrap}
+.txx{flex:none;min-width:34px;padding:4px 10px;font-size:13px}
+body.neo .txi{background:var(--ins);box-shadow:var(--inset)}
+/* ---- bottom-right home shortcut ---- */
+.hbtn{margin-left:auto;color:var(--ok)}
+.hbtn svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+body.neo .hbtn{color:var(--tx)}
 </style></head>
 <body>
 <main id="v"><p class="mu">Loading…</p></main>
@@ -252,6 +282,8 @@ function pct(d){const x=day(d),dn=x.done||{},it=items(d),P=plan(d);return Math.r
 const STREAK_AT=75;
 function streak(){let d=cur,n=0;if(pct(d)<STREAK_AT)d=addD(d,-1);while(n<400&&pct(d)>=STREAK_AT){n++;d=addD(d,-1)}return n}
 function xp(){let x=0;for(const y in S.days)for(const d in S.days[y]){const o=S.days[y][d];x+=(Object.values(o.done||{}).filter(Boolean).length+Object.values(o.sdone||{}).filter(Boolean).length+Object.values(o.pdone||{}).filter(Boolean).length)*10;if((o.water||0)>=plan(d).wmin)x+=10}return x}
+const lbar=(l,r,p,c)=>`<div class="lp"><div class="lph"><span>${l}</span><b>${r}</b></div><div class="bar"><i${c?` class="${c}"`:''} style="width:${Math.max(0,Math.min(100,p||0))}%"></i></div></div>`;
+const mon3=m=>new Date(2000,m-1,1).toLocaleDateString('en',{month:'short'});
 const sum=(it,t)=>it.filter(i=>i.t==t).reduce((a,i)=>a+i.a,0);
 
 const chk=(k,l,dn)=>`<label class="row"><input type="checkbox" data-act="chk" data-k="${esc(k)}" ${dn[k]?'checked':''}><span class="${dn[k]?'dn':''}">${esc(l)}</span></label>`;
@@ -309,7 +341,21 @@ function vHealth(){const x=day(cur),s=plan(cur),dn=x.done||{},p=pct(cur),w=x.wat
   +`<button class="pri" style="width:100%" data-act="pedit" data-d="${cur}">Plan this date</button>`}
 
 /* ---- stats: health + college + self + money ---- */
-let sc='all';
+let sc='all',mq='',mf='all',mc='';
+const CI={food:'🍔',travel:'🚌',bills:'🧾',study:'📚',shopping:'🛍️',salary:'💼'};
+const txIcon=i=>CI[(i.c||'').toLowerCase()]||(i.t=='in'?'💰':'💸');
+const dlab=d=>parse(d).toLocaleDateString('en',{weekday:'short',day:'numeric',month:'short'});
+function txFiltered(){const q=mq.trim().toLowerCase();return(S.money[mon]||[]).filter(i=>(mf=='all'||i.t==mf)&&(!mc||(i.c||'Other')==mc)&&(!q||[i.c,i.n,i.d,i.a].some(v=>String(v==null?'':v).toLowerCase().includes(q))))}
+function txBody(){const all=S.money[mon]||[],f=txFiltered();
+  if(!all.length)return'<p class="mu" style="margin:0">No entries this month. Open “Add entry” to create one.</p>';
+  if(!f.length)return'<p class="mu" style="margin:0">Nothing matches. Clear the search or pick another filter.</p>';
+  const g={};[...f].reverse().sort((a,b)=>b.d.localeCompare(a.d)).forEach(i=>(g[i.d]=g[i.d]||[]).push(i));
+  const filt=mq.trim()||mf!='all'||mc;
+  return`<div class="txsum">${filt?`Showing ${f.length} of ${all.length} · `:''}${fmt(sum(f,'out'))} spent · ${fmt(sum(f,'in'))} received</div>`
+  +Object.keys(g).map(d=>{const a=g[d],n=sum(a,'in')-sum(a,'out');
+    return`<div class="txg"><div class="txd"><span>${dlab(d)}</span><span class="${n<0?'out':'in'}">${n<0?'−':'+'}${fmt(Math.abs(n))}</span></div>`
+    +a.map(i=>`<div class="tx"><span class="txi">${txIcon(i)}</span><span class="txm"><b>${esc(i.n||i.c||(i.t=='in'?'Received':'Spent'))}</b>${i.n&&i.c?`<small>${esc(i.c)}</small>`:''}</span><b class="txa ${i.t}">${i.t=='in'?'+':'−'}${fmt(i.a)}</b><button class="txx" data-act="deltx" data-id="${i.id}" aria-label="Delete entry">${armed=='tx'+i.id?'Delete?':'✕'}</button></div>`).join('')+'</div>'}).join('')}
+
 const CATS={
  health:{n:'Health',c:'#38d6ff',g:'linear-gradient(0deg,#2563eb,#38d6ff)',f:d=>pct(d)},
  college:{n:'College',c:'#6d8bff',g:'linear-gradient(0deg,#4338ca,#8ab4ff)',f:d=>{const p=planSum(d);return p.t?Math.round(100*p.d/p.t):null}},
@@ -325,15 +371,15 @@ const rlab=()=>rng=='week'?'last 7 days':rng=='month'?parse(cur.slice(0,7)+'-01'
 const mon1=m=>new Date(2000,m-1,1).toLocaleDateString('en',{month:'narrow'});
 
 function catChart(k){const C=CATS[k];
-  if(rng=='week')return `<div class="card"><h3>${C.n} · last 7 days</h3><div class="cols">${week7().map(d=>{const v=C.f(d);return `<div class="col"><div class="cb"><i style="height:${v||0}%;background:${C.g}"></i></div><small>${sd2(d)}</small><small>${v==null?'—':v+'%'}</small></div>`}).join('')}</div></div>`;
+  if(rng=='week')return `<div class="card"><h3>${C.n} · last 7 days</h3>${week7().map(d=>{const v=C.f(d);return lbar(sd2(d),v==null?'—':v+'%',v||0)}).join('')}</div>`;
   if(rng=='month'){const m=cur.slice(0,7),f=parse(m+'-01'),off=(f.getDay()+6)%7;let c='';
     ['M','T','W','T','F','S','S'].forEach(w=>c+=`<div class="h">${w}</div>`);for(let i=0;i<off;i++)c+='<div class="h"></div>';
     mdays(m).forEach((d,i)=>{const v=C.f(d);c+=`<div style="background:${v==null?'rgba(80,130,230,.15)':`color-mix(in srgb,${C.c} ${v}%,rgba(80,130,230,.15))`}">${i+1}</div>`});
     return `<div class="card"><h3>${C.n} · ${rlab()}</h3><div class="cal">${c}</div></div>`}
-  const y=cur.slice(0,4),ds=k=='health'?hdates():rdates();let cols='';
+  const y=cur.slice(0,4),ds=k=='health'?hdates():rdates();let rows='';
   for(let m=1;m<=12;m++){const k2=y+'-'+pad2(m),a=avgS(ds.filter(d=>d.startsWith(k2)).map(C.f));
-    cols+=`<div class="col"><div class="cb"><i style="height:${a}%;background:${C.g}"></i></div><small>${mon1(m)}</small></div>`}
-  return `<div class="card"><h3>${y} · ${C.n} average by month</h3><div class="cols" style="gap:3px">${cols}</div></div>`}
+    rows+=lbar(mon3(m),a+'%',a)}
+  return `<div class="card"><h3>${y} · ${C.n} average by month</h3>${rows}</div>`}
 function healthSum(){const ds=rdates();
   if(rng=='week'){const a=k=>Math.round(ds.reduce((t,d)=>t+(day(d)[k]||0),0)/7*10)/10;
     return `<div class="card grid"><div><b>${Math.round(ds.reduce((t,d)=>t+pct(d),0)/7)}%</b><small>avg score</small></div><div><b>${a('water')}</b><small>avg water L</small></div><div><b>${a('protein')}</b><small>avg protein g</small></div><div><b>${streak()}</b><small>day streak</small></div></div>`}
@@ -345,16 +391,17 @@ function collegeSum(){const ds=rdates(),c=S.c,h=hrs(ds,planSum),asg=c.subs.filte
 function selfSum(){const ds=rdates(),f=S.f,h=hrs(ds,selfPlan),nt=f.topics.reduce((a,x)=>a+(x.notes||[]).filter(n=>!n.d).length,0);
   return `<div class="card grid"><div><b>${avgS(ds.map(CATS.self.f))}%</b><small>avg growth</small></div><div><b>${+h.d.toFixed(1)}/${+h.t.toFixed(1)}</b><small>hours done</small></div><div><b>${nt}</b><small>notes to cover</small></div><div><b>${f.topics.length}</b><small>topics</small></div></div>`}
 function mgroups(){const y=cur.slice(0,4);
-  if(rng=='year')return[...Array(12)].map((_,i)=>({l:mon1(i+1),it:S.money[y+'-'+pad2(i+1)]||[]}));
+  if(rng=='year')return[...Array(12)].map((_,i)=>({l:mon1(i+1),n:mon3(i+1),it:S.money[y+'-'+pad2(i+1)]||[]}));
   const ds=rng=='week'?week7():mdays(cur.slice(0,7));
-  return ds.map((d,i)=>({l:rng=='week'?sd2(d):((i+1)%5==1?String(i+1):'\u00a0'),it:(S.money[d.slice(0,7)]||[]).filter(x=>x.d==d)}))}
+  return ds.map((d,i)=>({n:sd2(d),l:rng=='week'?sd2(d):((i+1)%5==1?String(i+1):'\u00a0'),it:(S.money[d.slice(0,7)]||[]).filter(x=>x.d==d)}))}
 function sMoney(){const gs=mgroups().map(g=>Object.assign({},g,{i:sum(g.it,'in'),o:sum(g.it,'out')})),mx=Math.max(1,...gs.map(g=>Math.max(g.i,g.o))),
   tin=gs.reduce((a,g)=>a+g.i,0),tout=gs.reduce((a,g)=>a+g.o,0),H=v=>v>0?Math.max(3,Math.round(100*v/mx)):0,cats={},mo=rng=='month',wk=rng=='week';
-  gs.forEach(g=>g.it.filter(i=>i.t=='out').forEach(i=>{const c=i.c||'other';cats[c]=(cats[c]||0)+i.a}));
+  gs.forEach(g=>g.it.filter(i=>i.t=='out').forEach(i=>{const c=i.c||'Other';cats[c]=(cats[c]||0)+i.a}));
   const cl=Object.entries(cats).sort((a,b)=>b[1]-a[1]).slice(0,5);
-  return `<div class="card"><h3>Money · ${rlab()}</h3><div class="cols" style="gap:${mo?2:5}px">${gs.map(g=>`<div class="col"><div class="cb mb"><i class="mi" style="height:${H(g.i)}%"></i><i class="mo" style="height:${H(g.o)}%"></i></div><small style="font-size:${mo?9:12}px">${g.l}</small>${wk?`<small class="out" style="font-size:11px">${g.o?fmtC(g.o):'·'}</small>`:''}</div>`).join('')}</div><small style="margin-top:6px"><span class="in">■</span> received &nbsp; <span class="out">■</span> spent</small></div>
+  const act=gs.filter(g=>g.i||g.o),shown=mo?act:gs;
+  return `<div class="card"><h3>Money · ${rlab()}</h3>${shown.length?shown.map(g=>`<div class="lp"><div class="lph"><span>${g.n}</span><b>${g.i||g.o?`${g.i?`<span class="in">+${fmtC(g.i)}</span>`:''} ${g.o?`<span class="out">−${fmtC(g.o)}</span>`:''}`:'<em>—</em>'}</b></div><div class="bar"><i style="width:${H(g.i)}%"></i></div><div class="bar"><i class="s" style="width:${H(g.o)}%"></i></div></div>`).join(''):'<p class="mu" style="margin:0">No entries in this period.</p>'}<small class="lg">Top bar: received · bottom bar: spent</small></div>
   <div class="card grid"><div><b class="in">${fmtC(tin)}</b><small>received</small></div><div><b class="out">${fmtC(tout)}</b><small>spent</small></div><div><b class="${tin-tout<0?'out':''}">${fmtC(tin-tout)}</b><small>net</small></div><div><b>${fmtC(tout/gs.length)}</b><small>${rng=='year'?'avg / month':'avg / day'}</small></div></div>`
-  +(cl.length?`<div class="card"><h3>Where it went</h3>${cl.map(([k,v])=>`<div class="row" style="border:0;padding:4px 0 0"><span>${esc(k)}</span><span class="mu">${fmt(v)} · ${Math.round(100*v/tout)}%</span></div><div class="bar"><i style="width:${Math.round(100*v/cl[0][1])}%;background:linear-gradient(90deg,#be123c,#ff5d7a);box-shadow:0 0 10px var(--bad)"></i></div>`).join('')}</div>`:'')}
+  +(cl.length?`<div class="card"><h3>Where it went</h3>${cl.map(([k,v])=>{const pc=tout?Math.round(100*v/tout):0;return lbar(esc(k),fmt(v)+' · '+pc+'%',pc)}).join('')}</div>`:'')}
 function overview(){const net=mgroups().reduce((a,g)=>a+sum(g.it,'in')-sum(g.it,'out'),0);
   return `<div class="card"><h3>Overview · ${rlab()}</h3><div class="grid"><div><b>${avgS(hdates().map(CATS.health.f))}%</b><small>health</small></div><div><b>${avgS(rdates().map(CATS.college.f))}%</b><small>college</small></div><div><b>${avgS(rdates().map(CATS.self.f))}%</b><small>self</small></div><div><b class="${net<0?'out':'in'}">${fmtC(net)}</b><small>money net</small></div></div></div>`}
 function moneySm(){return fmtC(mgroups().reduce((a,g)=>a+sum(g.it,'out'),0))+' spent'}
@@ -371,15 +418,19 @@ const fmtC=n=>{const a=Math.abs(n),g=n<0?'-':'';return a>=100000?g+'₹'+(a/1000
 const moneyLeft=()=>{const out=sum(S.money[cur.slice(0,7)]||[],'out'),b=S.s.budget;return b>0?fmtC(b-out)+' left':fmtC(out)+' spent'};
 const moneyBal=m=>{const it=S.money[m]||[];return sum(it,'in')-sum(it,'out')};
 function vMoney(){const it=S.money[mon]||[],s=S.s,inc=sum(it,'in'),out=sum(it,'out'),cats={};
-  it.filter(i=>i.t=='out').forEach(i=>cats[i.c||'other']=(cats[i.c||'other']||0)+i.a);
+  it.filter(i=>i.t=='out').forEach(i=>cats[i.c||'Other']=(cats[i.c||'Other']||0)+i.a);
   const cl=Object.entries(cats).sort((a,b)=>b[1]-a[1]),dd=cur.startsWith(mon)?cur:mon+'-01';
+  const ecat={};it.forEach(i=>{const c=i.c||'Other';ecat[c]=(ecat[c]||0)+1});const ecl=Object.keys(ecat).sort((a,b)=>ecat[b]-ecat[a]);if(mc&&!ecat[mc])mc='';
   return `<div class="hd"><button data-act="mnav" data-s="-1">‹</button><b>${parse(mon+'-01').toLocaleDateString('en',{month:'long',year:'numeric'})}</b><button data-act="mnav" data-s="1">›</button></div>
   <div class="card grid" style="grid-template-columns:repeat(3,1fr)"><div><b class="in">${fmt(inc)}</b><small>in</small></div><div><b class="out">${fmt(out)}</b><small>spent</small></div><div><b>${fmt(inc-out)}</b><small>balance</small></div></div>`
   +acc('m-budget','Budget',s.budget>0?`${fmt(out)} / ${fmt(s.budget)}`:'not set',`<div class="row" style="border:0;padding-top:0"><span>Monthly budget (₹)</span><input data-act="cfg" data-k="budget" type="number" value="${s.budget}" style="width:110px"></div>${s.budget>0?`<div class="bar"><i style="width:${Math.min(100,Math.round(100*out/s.budget))}%;${out>s.budget?'background:var(--bad)':''}"></i></div><small>${fmt(out)} of ${fmt(s.budget)}</small>`:''}`)
   +acc('m-add','Add entry','',`<div class="f"><select id="tt"><option value="out">Spent</option><option value="in">Received</option></select><input id="ta" type="number" inputmode="decimal" placeholder="Amount"><input id="tc" list="cl" placeholder="Category"><input id="td" type="date" value="${dd}"><input id="tn" class="w" placeholder="Note (optional)"><button class="pri w" data-act="addtx">Add</button></div>
   <datalist id="cl"><option>Food</option><option>Travel</option><option>Bills</option><option>Study</option><option>Shopping</option><option>Salary</option></datalist>`)
-  +acc('m-cat','Where it went',cl.length?`${esc(cl[0][0])} ${fmt(cl[0][1])}`:'nothing yet',cl.map(([k,v])=>`<div class="row" style="border:0;padding:4px 0"><span>${esc(k)}</span><span class="mu">${fmt(v)}</span></div>`).join('')||'<p class="mu" style="margin:0">Nothing spent yet.</p>')
-  +acc('m-list','Entries',it.length+' entries',[...it].sort((a,b)=>b.d.localeCompare(a.d)).map(i=>`<div class="row"><span><b class="${i.t}">${i.t=='in'?'+':'−'}${fmt(i.a)}</b> ${esc(i.c||'')}<small>${i.d} ${esc(i.n||'')}</small></span><button data-act="deltx" data-id="${i.id}">✕</button></div>`).join('')||'<p class="mu" style="margin:0">Nothing yet.</p>')
+  +acc('m-cat','Where it went',cl.length?`${esc(cl[0][0])} ${fmt(cl[0][1])}`:'nothing yet',cl.map(([k,v])=>{const pc=out?Math.round(100*v/out):0;return lbar(esc(k),fmt(v)+' · '+pc+'%',pc)}).join('')||'<p class="mu" style="margin:0">Nothing spent yet.</p>')
+  +`<div class="card"><h3>Entries · ${it.length}</h3><input class="txs" id="mq" data-act="msearch" type="search" placeholder="Search note, category, amount or date" value="${esc(mq)}" autocomplete="off">
+  <div class="seg">${[['all','All'],['out','Spent'],['in','Received']].map(([k,l])=>`<button data-act="mtype" data-v="${k}" class="${mf==k?'on':''}">${l}</button>`).join('')}</div>
+  ${ecl.length>1?`<div class="txc">${ecl.map(c=>`<button data-act="mcat" data-c="${esc(c)}" class="${mc==c?'on':''}">${esc(c)}</button>`).join('')}</div>`:''}
+  <div id="txl">${txBody()}</div></div>`
   +`<p class="mu" style="font-size:13px">${store?'Saved to your local server.':'Server not reachable. Saved in this browser only.'}</p>`}
 
 /* ---- college ---- */
@@ -582,7 +633,7 @@ async function render(){
   const nm={home:'Home',health:'Health',college:'College',self:'Self',plan:'Plan',stats:'Stats',money:'Money',uiopt:'UI Options',settings:'Settings'};
   if(!$('#drawer').children.length)buildDrawer();
   const mo=$('#drawer').classList.contains('open');
-  $('#nav').innerHTML=`<button class="mbtn" data-act="menu" aria-label="Open menu" aria-expanded="${mo}"><span class="bars"><i></i><i></i><i></i></span></button><span class="mcur">${nm[tab]}</span>`;
+  $('#nav').innerHTML=`<button class="mbtn" data-act="menu" aria-label="Open menu" aria-expanded="${mo}"><span class="bars"><i></i><i></i><i></i></span></button><span class="mcur">${nm[tab]}</span>${tab!='home'?`<button class="hbtn" data-act="go" data-t="home" aria-label="Go to Home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></button>`:''}`;
   document.querySelectorAll('#drawer .dit').forEach(b=>b.classList.toggle('cur',b.dataset.t==tab));
   const hd=(tab=='health'||tab=='stats'||(tab=='college'&&cv=='main')||(tab=='self'&&sv=='main'))&&!editing?`<div class="hd"><button data-act="dnav" data-s="-1">‹</button><b>${cur==iso(new Date())?'Today · ':''}${dlabel(cur)}</b><button data-act="dnav" data-s="1">›</button></div>`:'';
   const fl0=$('.feedl'),sy0=fl0?fl0.scrollTop:0;
@@ -593,6 +644,7 @@ function capture(){}
 document.addEventListener('click',async e=>{
   const b=e.target.closest('button[data-act]');if(!b)return;const a=b.dataset.act;
   if(a=='menu'){openMenu();return}if(a=='menux'){closeMenu();return}closeMenu();
+  if(a!='deltx'&&typeof armed=='string'&&armed.startsWith('tx'))armed=null;
   if(a=='go'){capture();editing=false;tab=b.dataset.t;fa=true}
   else if(a=='dnav')cur=addD(cur,+b.dataset.s);
   else if(a=='rng')rng=b.dataset.r;
@@ -607,10 +659,13 @@ document.addEventListener('click',async e=>{
   else if(a=='step'){const k=b.dataset.k;setDay(cur,{[k]:Math.max(0,+((day(cur)[k]||0)+ +b.dataset.s).toFixed(2))})}
   else if(a=='addtx'){const amt=parseFloat($('#ta').value),d=$('#td').value||cur;if(!(amt>0))return $('#ta').focus();
     const m=d.slice(0,7);await ensureMon(m);S.money[m].push({id:uid0(),d,t:$('#tt').value,a:amt,c:$('#tc').value.trim(),n:$('#tn').value.trim()});saveMoney(m);mon=m}
-  else if(a=='deltx'){S.money[mon]=S.money[mon].filter(i=>i.id!=b.dataset.id);saveMoney(mon)}
+  else if(a=='deltx'){if(arm('tx'+b.dataset.id)){S.money[mon]=S.money[mon].filter(i=>i.id!=b.dataset.id);saveMoney(mon)}}
+  else if(a=='mtype')mf=b.dataset.v;
+  else if(a=='mcat')mc=mc==b.dataset.c?'':b.dataset.c;
   render()});
+document.addEventListener('input',e=>{const t=e.target;if(t.dataset&&t.dataset.act=='msearch'){mq=t.value;const l=$('#txl');if(l)l.innerHTML=txBody()}});
 document.addEventListener('change',e=>{
-  const t=e.target,a=t.dataset.act;if(!a)return;
+  const t=e.target,a=t.dataset.act;if(!a||a=='msearch')return;
   if(a=='chk'){const dn=Object.assign({},day(cur).done||{});dn[t.dataset.k]=t.checked;setDay(cur,{done:dn})}
   else if(a=='wake')setDay(cur,{wake:t.value});
   else if(colChange(t,a)){}
