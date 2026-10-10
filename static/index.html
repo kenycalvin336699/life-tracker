@@ -427,10 +427,10 @@ function vMoney(){const it=S.money[mon]||[],s=S.s,inc=sum(it,'in'),out=sum(it,'o
   +acc('m-add','Add entry','',`<div class="f"><select id="tt"><option value="out">Spent</option><option value="in">Received</option></select><input id="ta" type="number" inputmode="decimal" placeholder="Amount"><input id="tc" list="cl" placeholder="Category"><input id="td" type="date" value="${dd}"><input id="tn" class="w" placeholder="Note (optional)"><button class="pri w" data-act="addtx">Add</button></div>
   <datalist id="cl"><option>Food</option><option>Travel</option><option>Bills</option><option>Study</option><option>Shopping</option><option>Salary</option></datalist>`)
   +acc('m-cat','Where it went',cl.length?`${esc(cl[0][0])} ${fmt(cl[0][1])}`:'nothing yet',cl.map(([k,v])=>{const pc=out?Math.round(100*v/out):0;return lbar(esc(k),fmt(v)+' · '+pc+'%',pc)}).join('')||'<p class="mu" style="margin:0">Nothing spent yet.</p>')
-  +`<div class="card"><h3>Entries · ${it.length}</h3><input class="txs" id="mq" data-act="msearch" type="search" placeholder="Search note, category, amount or date" value="${esc(mq)}" autocomplete="off">
+  +acc('m-ent','Entries',it.length+' entries',`<input class="txs" id="mq" data-act="msearch" type="search" placeholder="Search note, category, amount or date" value="${esc(mq)}" autocomplete="off">
   <div class="seg">${[['all','All'],['out','Spent'],['in','Received']].map(([k,l])=>`<button data-act="mtype" data-v="${k}" class="${mf==k?'on':''}">${l}</button>`).join('')}</div>
   ${ecl.length>1?`<div class="txc">${ecl.map(c=>`<button data-act="mcat" data-c="${esc(c)}" class="${mc==c?'on':''}">${esc(c)}</button>`).join('')}</div>`:''}
-  <div id="txl">${txBody()}</div></div>`
+  <div id="txl">${txBody()}</div>`)
   +`<p class="mu" style="font-size:13px">${store?'Saved to your local server.':'Server not reachable. Saved in this browser only.'}</p>`}
 
 /* ---- college ---- */
@@ -531,7 +531,7 @@ function selfChange(t,a){const d=t.dataset;
   return true}
 
 /* ---- collapsible boxes (closed by default, remembered in this browser) ---- */
-let UI={};try{UI=JSON.parse(localStorage.getItem('lt:ui')||'{}')}catch(e){}
+let UI={};try{UI=JSON.parse(localStorage.getItem('lt:ui')||'{}')}catch(e){}if(UI['m-ent']===undefined)UI['m-ent']=true;
 const acc=(id,title,sum,body)=>`<div class="card acc"><button class="acch" data-act="tgl" data-id="${id}"><b>${title}</b><span class="sm">${sum||''}</span><span class="ar">${UI[id]?'▾':'▸'}</span></button>${UI[id]?`<div class="accb">${body}</div>`:''}</div>`;
 /* ---- plan: everything is planned per DATE (no weekday templates) ---- */
 let pd=cur,pm=cur.slice(0,7);
