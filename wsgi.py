@@ -11,6 +11,7 @@ import json
 import os
 import re
 import secrets
+import shutil
 import sys
 import threading
 from datetime import datetime
@@ -18,7 +19,7 @@ from pathlib import Path
 from urllib.parse import quote, unquote
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-import server as S  # noqa: E402  (server.py is import-safe: main() only runs as a script)
+import server as S  # noqa: E402
 
 _init_lock = threading.Lock()
 _ready = False
@@ -34,15 +35,21 @@ def _startup():
 
 
 def _daily_backup_once():
-    """No background thread on WSGI hosts: check once per day on a request."""
+    """No background thread on WSGI hosts: check once per day on a request.
+
+    Thread-safe: the lock prevents two concurrent requests from racing into
+    S.daily_backup() and possibly writing to the same filename second.
+    """
     global _last_backup_day
     today = f"{datetime.now():%Y%m%d}"
-    if today != _last_backup_day:
+    with _init_lock:
+        if today == _last_backup_day:
+            return
         _last_backup_day = today
-        try:
-            S.daily_backup()
-        except Exception:
-            pass
+    try:
+        S.daily_backup()
+    except Exception:
+        pass
 
 
 STATUS = {200: "200 OK", 400: "400 Bad Request", 401: "401 Unauthorized", 404: "404 Not Found",
@@ -58,6 +65,24 @@ def application(environ, start_response):
                    ("X-Content-Type-Options", "nosniff")] + list((extra or {}).items())
         start_response(STATUS[code], headers)
         return [body]
+
+    def stream_file(f, ctype, name):
+        """Return an iterator that streams the file. Not loaded into memory."""
+        size = f.stat().st_size
+        headers = [("Content-Type", ctype), ("Content-Length", str(size)),
+                   ("Content-Disposition", "inline; filename*=UTF-8''" + quote(name)),
+                   ("Cache-Control", "private, max-age=3600"),
+                   ("X-Content-Type-Options", "nosniff")]
+        start_response(STATUS[200], headers)
+
+        def it():
+            with open(f, "rb") as src:
+                while True:
+                    chunk = src.read(64 * 1024)
+                    if not chunk:
+                        break
+                    yield chunk
+        return it()
 
     def js(code, obj):
         return send(code, json.dumps(obj).encode())
@@ -77,13 +102,17 @@ def application(environ, start_response):
             return send(401, b"", "text/plain", {"WWW-Authenticate": 'Basic realm="Life Tracker"'})
 
     method = environ["REQUEST_METHOD"]
-    path = environ.get("PATH_INFO", "/")  # already URL-decoded by the server
+    path = unquote(environ.get("PATH_INFO", "/"))
 
     try:
         n = int(environ.get("CONTENT_LENGTH") or 0)
     except ValueError:
         n = -1
     body_in = environ["wsgi.input"]
+
+    # ---------------------------------------------------------------- HEAD
+    if method == "HEAD":
+        return send(200, b"", "text/plain")
 
     # ---------------------------------------------------------------- GET
     if method == "GET":
@@ -92,6 +121,10 @@ def application(environ, start_response):
                         {"Cache-Control": "no-cache"})
         if path == "/api/ping":
             return js(200, {"ok": True})
+        if path == "/api/docs":
+            with S.conn() as con:
+                rows = con.execute("SELECT name FROM docs ORDER BY name").fetchall()
+            return js(200, [r["name"] for r in rows])
         if path == "/api/export":
             with S.conn() as con:
                 docs = {r["name"]: json.loads(r["data"]) for r in con.execute("SELECT name,data FROM docs")}
@@ -123,9 +156,7 @@ def application(environ, start_response):
             f = S.FILES / m[1]
             if not r or not f.exists():
                 return js(404, {"error": "not found"})
-            return send(200, f.read_bytes(), r["content_type"], {
-                "Content-Disposition": "inline; filename*=UTF-8''" + quote(r["name"]),
-                "Cache-Control": "private, max-age=3600"})
+            return stream_file(f, r["content_type"], r["name"])
         return js(404, {"error": "not found"})
 
     # ---------------------------------------------------------------- PUT
@@ -133,7 +164,8 @@ def application(environ, start_response):
         m = re.fullmatch(r"/api/doc/([A-Za-z0-9_-]{1,64})", path)
         if not m:
             return js(404, {"error": "not found"})
-        if n < 0 or n > S.MAX_DOC:
+        lim = S.doc_limit(m[1])
+        if n < 0 or n > lim:
             return js(413, {"error": "document too large"})
         try:
             obj = json.loads(body_in.read(n))
@@ -142,7 +174,8 @@ def application(environ, start_response):
             return js(400, {"error": "body must be a JSON object"})
         with S.conn() as con:
             changed = S.put_doc(con, m[1], obj)
-        return js(200, {"ok": True, "changed": changed})
+        warn = "document is getting large" if n > lim * 0.8 else None
+        return js(200, {"ok": True, "changed": changed, "warn": warn})
 
     # --------------------------------------------------------------- POST
     if method == "POST":

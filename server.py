@@ -12,11 +12,13 @@ import json
 import os
 import re
 import secrets
+import shutil
 import socket
 import sqlite3
 import sys
 import threading
 import time
+import uuid
 from contextlib import contextmanager
 from datetime import datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -29,15 +31,22 @@ DATA = Path(os.environ.get("TRACKER_DATA", BASE / "data"))  # ALL your data live
 DB_PATH, FILES, BACKUPS = DATA / "tracker.db", DATA / "files", DATA / "backups"
 STATIC = BASE / "static"
 MAX_DOC = 2 * 1024 * 1024            # biggest single JSON document
+MAX_DOC_DAYS = 8 * 1024 * 1024       # bigger limit for legacy days-YYYY docs
 MAX_UPLOAD = 50 * 1024 * 1024        # biggest uploaded file
 ALLOWED_TYPES = {"application/pdf", "image/png", "image/jpeg"}
 HISTORY_KEEP = 30                    # old versions kept per document
 HISTORY_MIN_GAP = 600                # seconds between saved old versions
 DAILY_BACKUPS_KEEP = 30
 
+
+def doc_limit(name):
+    """Per-document size limit. Day shards are small; legacy days-YYYY larger."""
+    if re.fullmatch(r"days-\d{4}", name):
+        return MAX_DOC_DAYS
+    return MAX_DOC
+
+
 # --------------------------------------------- 2. DATABASE SCHEMA (APPEND ONLY)
-# Never edit or delete an existing entry. To change the schema, ADD a new entry
-# at the end. The server applies only the entries your database has not seen yet.
 MIGRATIONS = [
     # v1: documents (all app data), their history, and uploaded-file records
     """
@@ -80,7 +89,7 @@ def conn():
 # ------------------------------------------------- 3. MIGRATIONS AND BACKUPS
 def backup(label):
     BACKUPS.mkdir(parents=True, exist_ok=True)
-    dest = BACKUPS / f"tracker-{datetime.now():%Y%m%d-%H%M%S}-{label}.db"
+    dest = BACKUPS / f"tracker-{datetime.now():%Y%m%d-%H%M%S}-{label}-{uuid.uuid4().hex[:6]}.db"
     src, dst = sqlite3.connect(DB_PATH), sqlite3.connect(dest)
     with dst:
         src.backup(dst)
@@ -162,7 +171,7 @@ def put_doc(con, name, obj):
 
 # ------------------------------------------------------------ 5. HTTP SERVER
 class Handler(BaseHTTPRequestHandler):
-    server_version = "LifeTracker/1.0"
+    server_version = "LifeTracker/1.1"
 
     def log_message(self, fmt, *args):
         pass
@@ -176,10 +185,26 @@ class Handler(BaseHTTPRequestHandler):
         for k, v in (extra or {}).items():
             self.send_header(k, v)
         self.end_headers()
-        self.wfile.write(body)
+        if self.command != "HEAD":
+            self.wfile.write(body)
 
     def _json(self, code, obj):
         self._send(code, json.dumps(obj).encode())
+
+    def _serve_file(self, f, ctype, name):
+        """Stream an uploaded file instead of loading it fully into memory."""
+        size = f.stat().st_size
+        self.send_response(200)
+        self.send_header("Content-Type", ctype)
+        self.send_header("Content-Length", str(size))
+        self.send_header("Content-Disposition", "inline; filename*=UTF-8''" + quote(name))
+        self.send_header("Cache-Control", "private, max-age=3600")
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.end_headers()
+        if self.command == "HEAD":
+            return
+        with open(f, "rb") as src:
+            shutil.copyfileobj(src, self.wfile, 64 * 1024)
 
     def _path(self):
         return unquote(urlparse(self.path).path)
@@ -205,6 +230,10 @@ class Handler(BaseHTTPRequestHandler):
         self._send(401, b"", "text/plain", {"WWW-Authenticate": 'Basic realm="Life Tracker"'})
         return False
 
+    # --- HEAD (health probes)
+    def do_HEAD(self):
+        self._send(200, b"", "text/plain")
+
     # --- GET
     def do_GET(self):
         if not self._auth():
@@ -215,6 +244,11 @@ class Handler(BaseHTTPRequestHandler):
                               "text/html; charset=utf-8", {"Cache-Control": "no-cache"})
         if path == "/api/ping":
             return self._json(200, {"ok": True})
+        if path == "/api/docs":
+            # Discovery: list of document names (used by the UI for day-shard loading)
+            with conn() as con:
+                rows = con.execute("SELECT name FROM docs ORDER BY name").fetchall()
+            return self._json(200, [r["name"] for r in rows])
         if path == "/api/export":
             with conn() as con:
                 docs = {r["name"]: json.loads(r["data"]) for r in con.execute("SELECT name,data FROM docs")}
@@ -246,9 +280,7 @@ class Handler(BaseHTTPRequestHandler):
             f = FILES / m[1]
             if not r or not f.exists():
                 return self._json(404, {"error": "not found"})
-            return self._send(200, f.read_bytes(), r["content_type"], {
-                "Content-Disposition": "inline; filename*=UTF-8''" + quote(r["name"]),
-                "Cache-Control": "private, max-age=3600"})
+            return self._serve_file(f, r["content_type"], r["name"])
         self._json(404, {"error": "not found"})
 
     # --- PUT (save a document)
@@ -259,7 +291,8 @@ class Handler(BaseHTTPRequestHandler):
         if not m:
             return self._json(404, {"error": "not found"})
         n = self._length()
-        if n < 0 or n > MAX_DOC:
+        lim = doc_limit(m[1])
+        if n < 0 or n > lim:
             return self._json(413, {"error": "document too large"})
         try:
             obj = json.loads(self.rfile.read(n))
@@ -268,7 +301,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(400, {"error": "body must be a JSON object"})
         with conn() as con:
             changed = put_doc(con, m[1], obj)
-        self._json(200, {"ok": True, "changed": changed})
+        warn = "document is getting large" if n > lim * 0.8 else None
+        self._json(200, {"ok": True, "changed": changed, "warn": warn})
 
     # --- POST (upload a file / import a backup)
     def do_POST(self):
@@ -352,7 +386,7 @@ def main():
     srv = ThreadingHTTPServer((args.host, args.port), Handler)
     srv.daemon_threads = True
     print(f"Life Tracker running.  Data folder: {DATA}")
-    if args.host == "127.0.0.1":
+    if args.host in ("127.0.0.1", "localhost"):
         print(f"Open: http://127.0.0.1:{args.port}")
     else:
         print(f"Open on this computer: http://127.0.0.1:{args.port}")

@@ -131,7 +131,7 @@ body.menuopen{overflow:hidden}
 .dit.cur{border-left-color:var(--ok);color:var(--ok);background:linear-gradient(90deg,rgba(56,214,255,.18),transparent);text-shadow:0 0 10px rgba(56,214,255,.8)}
 .dsep{height:1px;margin:10px 4px;background:linear-gradient(90deg,var(--bd),transparent)}
 .dgrp{margin:2px 0 4px 4px;font-size:11px;letter-spacing:.22em;color:var(--mu)}
-/* ---- UI options (set from the menu) ---- */
+/* ---- UI options ---- */
 body.solid #drawer{background:linear-gradient(160deg,rgba(18,42,98,.98),rgba(7,15,40,.99));-webkit-backdrop-filter:none;backdrop-filter:none}
 body.nocorner .card::before,body.nocorner .card::after,body.nocorner .tile::before,body.nocorner .tile::after{display:none}
 body.noanim *,body.noanim *::before,body.noanim *::after{animation:none!important;transition:none!important}
@@ -142,14 +142,12 @@ body.neo{--bg:#ebebec;--sf:#f2f2f3;--tx:#1c1c1e;--mu:#7d7f88;--hi:#1c1c1e;--ac:#
  --raise:7px 8px 18px var(--shd),-6px -6px 14px var(--shl);--raise-s:3px 4px 9px var(--shd),-3px -3px 8px var(--shl);--inset:inset 3px 3px 7px var(--shd),inset -3px -3px 7px var(--shl);
  background:var(--bg);color:var(--tx);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;font-weight:500}
 body.neo.dk{--bg:#23252a;--sf:#2b2e34;--tx:#ececee;--mu:#9a9da7;--hi:#ececee;--ac:#4d8fff;--ok:#4d8fff;--bad:#ff6b73;--pos:#3ddc97;--bd:rgba(255,255,255,.09);--ins:rgba(0,0,0,.28);--grey:#5b5e68;--gtx:#fff;--shd:rgba(0,0,0,.55);--shl:rgba(255,255,255,.045);--glass:rgba(38,40,46,.72);--scr:rgba(0,0,0,.5);--ch:#ff7a93;--cc:#7fa6ff;--cs:#c99cff}
-/* text */
 body.neo h3,body.neo h2,body.neo .acch b{color:var(--tx);text-shadow:none;text-transform:none;letter-spacing:0;font-weight:600}
 body.neo h3,body.neo .acch b{font-size:16px}
 body.neo .tile h2{font-size:11px;margin:2px 0 4px}
 body.neo .big,body.neo .lv,body.neo .tile .pc,body.neo .mcur,body.neo .dh,body.neo .feedh{text-shadow:none}
 body.neo .mcur{color:var(--tx);letter-spacing:.06em;font-weight:600}
 body.neo .stats span{letter-spacing:.06em}
-/* boxes */
 body.neo .card,body.neo .tile{background:var(--sf);border:0;border-radius:22px;box-shadow:var(--raise);color:var(--tx)}
 body.neo .tile{border-radius:18px;box-shadow:var(--raise-s);padding:10px 2px}
 body.neo .tile:active{box-shadow:var(--inset)}
@@ -160,7 +158,6 @@ body.neo .acch .ar{color:var(--mu)}
 body.neo .row{border-bottom-color:var(--bd)}
 body.neo .sub{border-left-color:var(--bd)}
 body.neo .rl a,body.neo .rl span{border:0;border-radius:999px;box-shadow:var(--raise-s);padding:3px 11px;background:var(--sf)}
-/* buttons (pill) */
 :where(body.neo) button,body.neo .btn{background:var(--sf);border:0;border-radius:999px;padding:9px 16px;color:var(--tx);font-weight:500;box-shadow:var(--raise-s);transition:box-shadow .15s,background .15s}
 body.neo .btn{display:inline-block}
 :where(body.neo) button:active,body.neo .btn:active{box-shadow:var(--inset)}
@@ -170,20 +167,16 @@ body.neo .acch,body.neo .subt,body.neo .msg{background:none}
 body.neo .mbtn,body.neo .hbtn{width:48px;height:42px;border-radius:14px;background:var(--sf);border:0;box-shadow:var(--raise-s);color:var(--tx)}
 body.neo .bars i{box-shadow:none}
 body.neo .hd button{padding:6px 14px}
-/* inputs (embossed / inset) */
 body.neo input:not([type=checkbox]),body.neo select{background:transparent;border:0;border-radius:999px;box-shadow:var(--inset);padding:9px 16px;color:var(--tx)}
 body.neo textarea{background:transparent;border:0;border-radius:20px;box-shadow:var(--inset);padding:12px 16px;color:var(--tx)}
 body.neo input:focus-visible,body.neo select:focus-visible,body.neo textarea:focus-visible,body.neo button:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
-/* checkbox -> raised circle with tick */
 body.neo input[type=checkbox]{-webkit-appearance:none;appearance:none;width:24px;height:24px;flex:none;margin:0;border-radius:50%;background:var(--sf);box-shadow:var(--raise-s);display:grid;place-items:center;cursor:pointer}
 body.neo input[type=checkbox]:checked{background:var(--grey);box-shadow:var(--raise-s)}
 body.neo input[type=checkbox]:checked::after{content:"";width:6px;height:11px;border:solid #fff;border-width:0 2.5px 2.5px 0;transform:rotate(45deg) translate(-1px,-1px)}
-/* progress = slider (blue track + white knob) */
 body.neo .bar{height:12px;border-radius:999px;background:var(--ins);box-shadow:var(--inset);margin:10px 0}
 body.neo .bar i{border-radius:999px;background:var(--pg);box-shadow:none}
 body.neo .bar i::after,body.neo .xpb i::after{display:none}
 body.neo .bar b{background:var(--mu);opacity:.8}
-/* charts / calendar */
 body.neo .cb{background:var(--ins);border-radius:12px;box-shadow:var(--inset)}
 body.neo .cb i{background:linear-gradient(0deg,#2f7cf6,#7fb2ff)!important;border-radius:8px 8px 0 0}
 body.neo .cb.mb .mi{background:linear-gradient(0deg,#1f9d6b,#5fd8a8)!important}
@@ -191,16 +184,13 @@ body.neo .cb.mb .mo{background:linear-gradient(0deg,#e5484d,#ff8f93)!important}
 body.neo .cal div,body.neo .cal button{border-radius:10px}
 body.neo .cal button.sel{border-color:transparent;box-shadow:0 0 0 2px var(--ac)}
 body.neo .in{color:var(--pos)}
-/* status card extras */
 body.neo .rank{margin:6px 0 8px 4px;border:0;border-radius:14px;background:var(--sf);color:var(--ac);text-shadow:none;box-shadow:var(--raise-s);animation:none}
 body.neo .radar{filter:none}
 body.neo .radar polygon{stroke:var(--bd)}
 body.neo .radar text{fill:var(--mu)}
 body.neo .radar polygon:last-of-type{fill:rgba(47,124,246,.22);stroke:var(--ac)}
-/* home notices */
 body.neo .msg.health{color:var(--ch)}body.neo .msg.college{color:var(--cc)}body.neo .msg.self{color:var(--cs)}body.neo .msg.ok{color:var(--ok)}
 body.neo .msg::before{box-shadow:none}
-/* bottom bar, menu, overlays */
 body.neo nav{background:var(--glass);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border-top:0;box-shadow:0 -4px 16px var(--shd)}
 body.neo #scrim.show{background:var(--scr)}
 body.neo #drawer{background:var(--glass);border-right:0;border-radius:0 26px 26px 0;box-shadow:10px 0 32px var(--shd)}
@@ -211,7 +201,6 @@ body.neo .dit.cur{background:var(--grey);color:var(--gtx);text-shadow:none}
 body.neo .dgrp{color:var(--mu)}
 body.neo #lvup{background:var(--glass)!important;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);color:var(--ac);text-shadow:none}
 
-/* ---- linear progress: shared by every bar (labelled rows, tracks, fills) ---- */
 :root{--pg:linear-gradient(90deg,#2563eb,#38d6ff);--pgs:linear-gradient(90deg,#be123c,#ff5d7a)}
 body.neo{--pg:#0f5c5c;--pgs:#d6455d}
 body.neo.dk{--pg:#2fb3a6;--pgs:#ff6b73}
@@ -222,7 +211,6 @@ body.neo.dk{--pg:#2fb3a6;--pgs:#ff6b73}
 .lp .bar{margin:5px 0 0}.lp .bar+.bar{margin-top:4px}
 body .bar i.s{background:var(--pgs)}
 .lg{margin:8px 0 0}
-/* ---- money entries: search, filters, grouped list ---- */
 .txs{margin:2px 0 10px}
 .txsum{font-size:12px;color:var(--mu);margin:0 0 8px}
 .txc{display:flex;gap:6px;overflow-x:auto;margin:0 0 10px;padding:2px 2px 6px;scrollbar-width:none}
@@ -236,10 +224,30 @@ body .bar i.s{background:var(--pgs)}
 .txa{flex:none;white-space:nowrap}
 .txx{flex:none;min-width:34px;padding:4px 10px;font-size:13px}
 body.neo .txi{background:var(--ins);box-shadow:var(--inset)}
-/* ---- bottom-right home shortcut ---- */
 .hbtn{margin-left:auto;color:var(--ok)}
 .hbtn svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 body.neo .hbtn{color:var(--tx)}
+
+/* ---- new features: per-item streak, heatmap, mood, digest, on-this-day, pause ---- */
+.fire{font-size:12px;color:#ff9a3c;margin-left:6px;white-space:nowrap}
+body.neo .fire{color:#e07c1c}
+.heat{display:grid;grid-template-columns:repeat(53,1fr);gap:2px;margin:10px 0 4px;overflow-x:auto}
+.heat div{aspect-ratio:1;min-width:3px;border-radius:2px;background:rgba(80,130,230,.1)}
+.heat .hm-1{background:rgba(56,214,255,.25)}
+.heat .hm-2{background:rgba(56,214,255,.5)}
+.heat .hm-3{background:rgba(56,214,255,.78)}
+.heat .hm-4{background:#38d6ff}
+body.neo .heat div{background:var(--ins);border-radius:3px}
+body.neo .heat .hm-1{background:color-mix(in srgb,var(--ac) 25%,var(--ins))}
+body.neo .heat .hm-2{background:color-mix(in srgb,var(--ac) 50%,var(--ins))}
+body.neo .heat .hm-3{background:color-mix(in srgb,var(--ac) 75%,var(--ins))}
+body.neo .heat .hm-4{background:var(--ac)}
+.me{display:flex;gap:4px;margin:4px 0 6px}
+.me button{flex:1;padding:6px 2px;font-size:16px;background:rgba(80,130,230,.1);border:1px solid var(--bd);border-radius:0}
+.me button.on{background:var(--ac);border-color:var(--ac);color:#fff}
+.digest{white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,monospace;font-size:12.5px;background:rgba(5,12,35,.7);padding:10px;border:1px solid var(--bd);margin:8px 0;word-break:break-word;line-height:1.5}
+body.neo .digest{background:var(--ins);border:0;border-radius:12px;box-shadow:var(--inset)}
+.paused{display:inline-block;background:rgba(255,93,122,.15);color:var(--bad);border:1px solid var(--bad);padding:1px 8px;font-size:11px;letter-spacing:.15em;margin-left:8px;vertical-align:middle}
 </style></head>
 <body>
 <main id="v"><p class="mu">Loading…</p></main>
@@ -268,40 +276,100 @@ const lines=v=>v.split('\n').map(x=>x.trim()).filter(Boolean);
 
 async function init(){try{const r=await fetch('/api/ping');store=r.ok}catch(e){}
   A={upload:async f=>{const r=await fetch('/api/files',{method:'POST',headers:{'Content-Type':f.type||'application/pdf','X-Filename':encodeURIComponent(f.name)},body:f});if(!r.ok)throw new Error('upload');return r.json()},delete:id=>fetch('/api/files/'+id,{method:'DELETE'})}}
-async function load(n,def){try{const r=await fetch('/api/doc/'+n);if(r.status==404)return def;if(r.ok)return await r.json()}catch(e){}try{const v=localStorage.getItem('lt:'+n);return v?JSON.parse(v):def}catch(e){return def}}
+async function load(n,def){let err=null;
+  try{const r=await fetch('/api/doc/'+n);if(r.status==404)return def;if(r.ok)return await r.json();err=r.status}catch(e){}
+  try{const v=localStorage.getItem('lt:'+n);if(v){if(err&&err>=500)console.warn('load('+n+'): server '+err+', using cached copy');return JSON.parse(v)}return def}catch(e){return def}}
 const timers={},pend={};
 function banner(){const b=$('#off');if(b)b.style.display=Object.keys(pend).length?'block':'none'}
 function flush(){Object.keys(pend).forEach(n=>{const o=pend[n];fetch('/api/doc/'+n,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(o)}).then(r=>{if(!r.ok)throw 0;if(pend[n]===o)delete pend[n];banner()}).catch(banner)});banner()}
 function save(n,o){try{localStorage.setItem('lt:'+n,JSON.stringify(o))}catch(e){}pend[n]=o;clearTimeout(timers[n]);timers[n]=setTimeout(flush,400)}
 setInterval(()=>{if(Object.keys(pend).length)flush()},5000);
 document.addEventListener('visibilitychange',()=>{if(document.hidden){Object.keys(timers).forEach(k=>clearTimeout(timers[k]));flush()}});
-const ensureYear=async y=>{if(!S.days[y])S.days[y]=(await load('days-'+y,{days:{}})).days||{}};
+
+// ---- days are sharded by month (days-YYYY-MM). Loader + migration -----------
+const ensureDayMon=async m=>{if(S.days[m])return;S.days[m]=(await load('days-'+m,{days:{}})).days||{}};
+const saveDays=m=>save('days-'+m,{days:S.days[m]});
+const day=d=>((S.days[d.slice(0,7)]||{})[d])||{};
+function setDay(d,p){const m=d.slice(0,7);S.days[m]=S.days[m]||{};const o=S.days[m][d]||{done:{}};if(!o.done)o.done={};S.days[m][d]=Object.assign(o,p);saveDays(m)}
+
+async function migrateDayShards(){
+  if(S.s&&S.s.dv===2)return;
+  let names=[];
+  try{const r=await fetch('/api/docs');if(r.ok)names=await r.json()}catch(e){}
+  const years=names.filter(n=>/^days-\d{4}$/.test(n)).map(n=>n.slice(5));
+  for(const y of years){
+    let old=null;
+    try{const r=await fetch('/api/doc/days-'+y);if(r.ok)old=await r.json()}catch(e){}
+    if(!old||!old.days)continue;
+    const byMonth={};
+    for(const d in old.days){const m=d.slice(0,7);(byMonth[m]=byMonth[m]||{days:{}}).days[d]=old.days[d]}
+    for(const m in byMonth){
+      let existing=null;
+      try{const r=await fetch('/api/doc/days-'+m);if(r.ok)existing=await r.json()}catch(e){}
+      const merged=existing&&existing.days?Object.assign({},existing.days,byMonth[m].days):byMonth[m].days;
+      try{await fetch('/api/doc/days-'+m,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({days:merged})})}catch(e){}
+    }
+  }
+  S.s.dv=2;saveSet();
+}
+
+async function loadAllDayMonths(){
+  let names=[];
+  try{const r=await fetch('/api/docs');if(r.ok)names=await r.json()}catch(e){}
+  const months=names.filter(n=>/^days-\d{4}-\d{2}$/.test(n)).map(n=>n.slice(5));
+  const seen=new Set(months);
+  for(let i=0;i<18;i++){const d=addD(cur,-i*30);const m=d.slice(0,7);if(!seen.has(m)){months.push(m);seen.add(m)}}
+  for(const m of months)await ensureDayMon(m);
+}
+
 const ensureMon=async m=>{if(!S.money[m]){S.money[m]=(await load('money-'+m,{items:[]})).items||[];
   let fx=false;S.money[m].forEach(i=>{if(i.id==null||i.id===''){i.id=uid0()+uid0();fx=true}});if(fx)saveMoney(m)}};
-const saveDays=y=>save('days-'+y,{days:S.days[y]}),saveMoney=m=>save('money-'+m,{items:S.money[m]}),saveSet=()=>save('health',S.s);
+const saveMoney=m=>save('money-'+m,{items:S.money[m]}),saveSet=()=>save('health',S.s);
 
-const day=d=>(S.days[d.slice(0,4)]||{})[d]||{};
-function setDay(d,p){const y=d.slice(0,4);S.days[y]=S.days[y]||{};const o=S.days[y][d]||{done:{}};if(!o.done)o.done={};S.days[y][d]=Object.assign(o,p);saveDays(y)}
+// ---- plan cache (bug #13) ---------------------------------------------------
+let _planCache=null;
+function plan(d){
+  if(_planCache&&_planCache.has(d))return _planCache.get(d);
+  const r=_plan(d);
+  if(!_planCache)_planCache=new Map();
+  _planCache.set(d,r);
+  return r;
+}
+function _plan(d){const P=dp(d),f=day(d).fz,T=f||tg(d),ex=P.ex||[],rest=isRest(ex);
+  return{wake:T.wake,sleep:T.sleep,wmin:T.wmin,wmax:T.wmax,protein:T.protein,rest,ex:rest?[]:ex,fd:P.fd||[],study:P.study||[],self:P.self||[],td:P.td||[]}}
+
 function legacyPlan(d){const s=S.s,k=dk(d),ex=s.ex[k]||[],rest=!ex.length||/^rest/i.test(ex[0]);
   return{wake:s.wake,sleep:s.sleep,wmin:s.wmin,wmax:s.wmax,protein:s.protein,rest,ex:rest?[]:ex.slice(),fd:(s.fd[k]||[]).slice(),
     study:((S.c.plan||{})[k]||[]).map(i=>({s:i.s,h:i.h,nm:(sub(i.s)||{}).n||i.nm||''})),
     self:S.f.topics.filter(x=>((x.sch||{})[k]||{}).h>0).map(x=>({id:x.id,n:x.n,h:x.sch[k].h,at:x.sch[k].at||''}))}}
 
-function freezeSync(){const t=iso(new Date());for(const yy in S.days){const all=S.days[yy];let ch=false;for(const d in all)if(d<t&&!all[d].fz){all[d].fz=legacyPlan(d);ch=true}if(ch)saveDays(yy)}}
+function freezeSync(){const t=iso(new Date());for(const mm in S.days){const all=S.days[mm];let ch=false;for(const d in all)if(d<t&&!all[d].fz){all[d].fz=legacyPlan(d);ch=true}if(ch)saveDays(mm)}}
 function items(d){const P=plan(d);return[{k:'wake'},{k:'sleep'},...P.ex.map(t=>({k:'e:'+t})),...P.fd.map(t=>({k:'f:'+t}))]}
-function pct(d){const x=day(d),dn=x.done||{},it=items(d),P=plan(d);return Math.round(100*(it.filter(i=>dn[i.k]).length+((x.water||0)>=P.wmin?1:0))/(it.length+1))}
+function pct(d){
+  const x=day(d);
+  if(x.pause)return 100;              // paused days always count as a full day for streak
+  const dn=x.done||{},it=items(d),P=plan(d);
+  const wm=P.wmin>0?1:0;
+  const wd=P.wmin>0&&((x.water||0)>=P.wmin)?1:0;
+  const denom=it.length+wm;
+  if(!denom)return 0;
+  return Math.round(100*(it.filter(i=>dn[i.k]).length+wd)/denom)
+}
 const STREAK_AT=75;
 function streak(){let d=cur,n=0;if(pct(d)<STREAK_AT)d=addD(d,-1);while(n<400&&pct(d)>=STREAK_AT){n++;d=addD(d,-1)}return n}
-function xp(){let x=0;for(const y in S.days)for(const d in S.days[y]){const o=S.days[y][d];x+=(Object.values(o.done||{}).filter(Boolean).length+Object.values(o.sdone||{}).filter(Boolean).length+Object.values(o.pdone||{}).filter(Boolean).length)*10;if((o.water||0)>=plan(d).wmin)x+=10}return x}
-const lbar=(l,r,p,c)=>`<div class="lp"><div class="lph"><span>${l}</span><b>${r}</b></div><div class="bar"><i${c?` class="${c}"`:''} style="width:${Math.max(0,Math.min(100,p||0))}%"></i></div></div>`;
-const mon3=m=>new Date(2000,m-1,1).toLocaleDateString('en',{month:'short'});
+function itemStreak(key){let d=cur,n=0;while(n<60&&(day(d).done||{})[key]){n++;d=addD(d,-1)}return n}
+function xp(){let x=0;for(const mm in S.days)for(const d in S.days[mm]){const o=S.days[mm][d];x+=(Object.values(o.done||{}).filter(Boolean).length+Object.values(o.sdone||{}).filter(Boolean).length+Object.values(o.pdone||{}).filter(Boolean).length+Object.values(o.tdone||{}).filter(Boolean).length)*10;if((o.water||0)>=plan(d).wmin)x+=10}return x}
 const sum=(it,t)=>it.filter(i=>i.t==t).reduce((a,i)=>a+i.a,0);
 
-const chk=(k,l,dn)=>`<label class="row"><input type="checkbox" data-act="chk" data-k="${esc(k)}" ${dn[k]?'checked':''}><span class="${dn[k]?'dn':''}">${esc(l)}</span></label>`;
-function meter(k,l,u,steps,v,goal,min){const p=Math.min(100,Math.round(100*v/goal));
-  return `<div class="row" style="border:0;padding-bottom:0"><span>${l}</span><span class="mu">${+v.toFixed(2)} / ${goal} ${u}</span></div><div class="bar"><i style="width:${p}%"></i>${min?`<b style="left:${100*min/goal}%"></b>`:''}</div><div class="st">${steps.map(s=>`<button data-act="step" data-k="${k}" data-s="${s}">${s>0?'+':'−'} ${Math.abs(s)}</button>`).join('')}</div>`}
+const lbar=(l,r,p,c)=>`<div class="lp"><div class="lph"><span>${l}</span><b>${r}</b></div><div class="bar"><i${c?` class="${c}"`:''} style="width:${Math.max(0,Math.min(100,p||0))}%"></i></div></div>`;
+const mon3=m=>new Date(2000,m-1,1).toLocaleDateString('en',{month:'short'});
 
-function dstat(d){const x=day(d),dn=x.done||{},P=plan(d),fr=(a,pre)=>a.length?a.filter(t=>dn[pre+t]).length/a.length:null,foods=fr(P.fd,'f:'),w=(x.water||0)>=P.wmin?1:0,sp=planSum(d),se=selfPlan(d);
+const chk=(k,l,dn)=>`<label class="row"><input type="checkbox" data-act="chk" data-k="${esc(k)}" ${dn[k]?'checked':''}><span class="${dn[k]?'dn':''}">${esc(l)}</span></label>`;
+const chkSt=(k,l,dn)=>`<label class="row"><input type="checkbox" data-act="chk" data-k="${esc(k)}" ${dn[k]?'checked':''}><span class="${dn[k]?'dn':''}">${esc(l)}<span class="fire">🔥 ${itemStreak(k)}d</span></span></label>`;
+function meter(k,l,u,steps,v,goal,min){const g=goal>0?goal:1;const p=Math.min(100,Math.round(100*v/g));
+  return `<div class="row" style="border:0;padding-bottom:0"><span>${l}</span><span class="mu">${+v.toFixed(2)} / ${goal} ${u}</span></div><div class="bar"><i style="width:${p}%"></i>${min?`<b style="left:${Math.min(100,100*min/g)}%"></b>`:''}</div><div class="st">${steps.map(s=>`<button data-act="step" data-k="${k}" data-s="${s}">${s>0?'+':'−'} ${Math.abs(s)}</button>`).join('')}</div>`}
+
+function dstat(d){const x=day(d),dn=x.done||{},P=plan(d),fr=(a,pre)=>a.length?a.filter(t=>dn[pre+t]).length/a.length:null,foods=fr(P.fd,'f:'),w=P.wmin>0&&((x.water||0)>=P.wmin)?1:0,sp=planSum(d),se=selfPlan(d);
   return{str:P.rest?null:fr(P.ex,'e:'),vit:foods==null?w:(foods+w)/2,agi:(['wake','sleep'].filter(k=>dn[k]).length)/2,int:sp.t?sp.d/sp.t:null,sen:se.t?se.d/se.t:null}}
 function statusBox(){const X=xp(),lv=Math.floor(X/200)+1,ps=[...Array(7)].map((_,i)=>dstat(addD(cur,i-6)));
   const av=k=>{const v=ps.map(o=>o[k]).filter(z=>z!=null);return v.length?Math.round(100*v.reduce((a,b)=>a+b,0)/v.length):0};
@@ -315,6 +383,13 @@ function statusBox(){const X=xp(),lv=Math.floor(X/200)+1,ps=[...Array(7)].map((_
 function lvCheck(){const lv=Math.floor(xp()/200)+1;let o=0;try{o=+localStorage.getItem('lt:lv')||0;if(lv>o)localStorage.setItem('lt:lv',lv)}catch(e){}
   if(o&&lv>o){const e=$('#lvup');e.innerHTML='LEVEL UP!<small style="font-size:16px;letter-spacing:.2em">LEVEL '+lv+'</small>';e.classList.add('on');setTimeout(()=>e.classList.remove('on'),2800)}}
 function plannedAhead(){const t=iso(new Date());let n=0;for(const y in S.p)for(const d in S.p[y])if(d>=t&&hasP(S.p[y][d]))n++;return n}
+function onThisDay(){
+  const parts=[];
+  [365,730,1095].forEach(n=>{const d=addD(cur,-n);const x=day(d);
+    if(x&&(Object.keys(x).length)){const p=pct(d);parts.push(`<div class="row nrow"><span>${n==365?'1 year':n==730?'2 years':'3 years'} ago · ${sd2(d)}</span><span class="mu">Health ${p}%${x.water?` · ${+x.water.toFixed(1)}L`:''}</span></div>`)} });
+  if(!parts.length)return '';
+  return `<div class="card"><h3>On this day</h3>${parts.join('')}</div>`;
+}
 function vHome(){const p=pct(cur),x=day(cur),pl=plan(cur),td=pl.td,tn=x.tdone||{};
   return '<div class="homewrap"><div class="homefix">'+statusBox()+`<div class="tiles">
   <button class="tile" data-act="go" data-t="health"><div class="ic">❤️</div><h2>Health</h2><div class="pc">${p}%</div><small>${+(x.water||0).toFixed(1)}/${pl.wmax} L</small></button>
@@ -322,7 +397,7 @@ function vHome(){const p=pct(cur),x=day(cur),pl=plan(cur),td=pl.td,tn=x.tdone||{
   <button class="tile" data-act="go" data-t="self">${selfTile()}</button>
   <button class="tile" data-act="go" data-t="plan"><div class="ic">🗓️</div><h2>Plan</h2><div class="pc">${plannedAhead()}</div><small>days ahead</small></button>
   <button class="tile" data-act="go" data-t="money"><div class="ic">💰</div><h2>Money</h2><div class="pc">${fmtC(moneyBal(cur.slice(0,7)))}</div><small>${moneyLeft()}</small></button></div>`
-  +(td.length?`<div class="card" style="margin-top:12px"><h3>Tasks · ${dlabel(cur)}</h3>${td.map(t=>`<label class="row"><input type="checkbox" data-act="tkd" data-t="${esc(t)}" ${tn[t]?'checked':''}><span class="${tn[t]?'dn':''}">${esc(t)}</span></label>`).join('')}</div>`:'')+'</div>'+homeFeed()+'</div>'}
+  +(td.length?`<div class="card" style="margin-top:12px"><h3>Tasks · ${dlabel(cur)}</h3>${td.map(t=>`<label class="row"><input type="checkbox" data-act="tkd" data-t="${esc(t)}" ${tn[t]?'checked':''}><span class="${tn[t]?'dn':''}">${esc(t)}</span></label>`).join('')}</div>`:'')+'</div>'+homeFeed()+onThisDay()+'</div>'}
 
 /* ---- home: remaining-task reminders (messages, not boxes) ---- */
 let fa=true;
@@ -344,11 +419,14 @@ function homeFeed(){const x=day(cur),dn=x.done||{},P=plan(cur),L=[],add=(g,t)=>L
 
 function vHealth(){const x=day(cur),s=plan(cur),dn=x.done||{},p=pct(cur),w=x.water||0,
   nd=(a,pre)=>a.filter(t=>dn[pre+t]).length;
-  return `<div class="card"><small>HEALTH · DAILY QUEST</small><div class="big">${p}%</div><div class="bar"><i style="width:${p}%"></i></div><small>${dlabel(cur)}</small></div>`
+  const paused=!!x.pause;
+  return `<div class="card"><small>HEALTH · DAILY QUEST</small><div class="big">${p}%${paused?'<span class="paused">PAUSED</span>':''}</div><div class="bar"><i style="width:${p}%"></i></div><small>${dlabel(cur)}</small></div>`
   +acc('h-routine','Routine',`${['wake','sleep'].filter(k=>dn[k]).length}/2 done`,`${chk('wake','Wake up at '+tm(s.wake),dn)}<div class="row"><span class="mu">Actual wake-up time</span><input type="time" data-act="wake" value="${x.wake||''}"></div>${chk('sleep','Sleep by '+tm(s.sleep),dn)}`)
-  +acc('h-water','Water',`${w>=s.wmin?'✓ ':''}${+w.toFixed(2)} / ${s.wmax} L`,meter('water','Water ('+s.wmin+' to '+s.wmax+' L a day)','L',[-0.25,0.25,0.5],w,s.wmax,s.wmin))
-  +acc('h-ex','Exercise',s.rest?'Rest day':(s.ex.length?`${nd(s.ex,'e:')}/${s.ex.length} done`:'none planned'),s.rest?'<p class="mu" style="margin:0">Rest day. Recover and stretch lightly.</p>':(s.ex.map(t=>chk('e:'+t,t,dn)).join('')||'<p class="mu" style="margin:0">Nothing planned for this date.</p>'))
-  +acc('h-food','Food',`${s.fd.length?nd(s.fd,'f:')+'/'+s.fd.length+' · ':''}${x.protein||0} g protein`,`${s.fd.map(t=>chk('f:'+t,t,dn)).join('')||'<p class="mu" style="margin:0">No meals planned.</p>'}<div style="height:8px"></div>${meter('protein','Protein','g',[-10,10,25],x.protein||0,s.protein)}`)
+  +acc('h-water','Water',`${w>=s.wmin&&s.wmin>0?'✓ ':''}${+w.toFixed(2)} / ${s.wmax} L`,meter('water','Water ('+s.wmin+' to '+s.wmax+' L a day)','L',[-0.25,0.25,0.5],w,s.wmax,s.wmin))
+  +acc('h-ex','Exercise',s.rest?'Rest day':(s.ex.length?`${nd(s.ex,'e:')}/${s.ex.length} done`:'none planned'),s.rest?'<p class="mu" style="margin:0">Rest day. Recover and stretch lightly.</p>':(s.ex.map(t=>chkSt('e:'+t,t,dn)).join('')||'<p class="mu" style="margin:0">Nothing planned for this date.</p>'))
+  +acc('h-food','Food',`${s.fd.length?nd(s.fd,'f:')+'/'+s.fd.length+' · ':''}${x.protein||0} g protein`,`${s.fd.map(t=>chkSt('f:'+t,t,dn)).join('')||'<p class="mu" style="margin:0">No meals planned.</p>'}<div style="height:8px"></div>${meter('protein','Protein','g',[-10,10,25],x.protein||0,s.protein)}`)
+  +acc('h-me','Mood & energy',`${x.mood?['😞','😐','🙂','😊','😁'][x.mood-1]:'—'} ${x.energy?['🪫','🔋','⚡','💪','🔥'][x.energy-1]:'—'}`,`<small>How do you feel today? Tap to set (1–5).</small><div class="row" style="border:0"><span class="mu">Mood</span></div><div class="me">${[1,2,3,4,5].map(v=>`<button data-act="mood" data-v="${v}" class="${x.mood==v?'on':''}">${['😞','😐','🙂','😊','😁'][v-1]}</button>`).join('')}</div><div class="row" style="border:0"><span class="mu">Energy</span></div><div class="me">${[1,2,3,4,5].map(v=>`<button data-act="energy" data-v="${v}" class="${x.energy==v?'on':''}">${['🪫','🔋','⚡','💪','🔥'][v-1]}</button>`).join('')}</div>`)
+  +`<div class="st" style="margin-bottom:8px">${paused?`<button data-act="unpause">Unpause today</button>`:`<button data-act="pause" data-n="1">Pause today</button><button data-act="pause" data-n="3">Pause 3 days</button>`}</div>`
   +`<button class="pri" style="width:100%" data-act="pedit" data-d="${cur}">Plan this date</button>`}
 
 /* ---- stats: health + college + self + money ---- */
@@ -395,11 +473,18 @@ const pad2=n=>String(n).padStart(2,'0');
 const mdays=m=>{const[y,mo]=m.split('-').map(Number),n=new Date(y,mo,0).getDate();return[...Array(n)].map((_,i)=>m+'-'+pad2(i+1))};
 const week7=()=>[...Array(7)].map((_,i)=>addD(cur,i-6));
 const sd2=d=>parse(d).toLocaleDateString('en',{day:'numeric',month:'short'});
-const rdates=()=>{if(rng=='week')return week7();if(rng=='month')return mdays(cur.slice(0,7));const y=cur.slice(0,4);return[...new Set([...Object.keys(S.p[y]||{}),...Object.keys(S.days[y]||{})])].filter(d=>d.startsWith(y)).sort()};
-const hdates=()=>rng=='year'?rdates().filter(d=>(S.days[cur.slice(0,4)]||{})[d]):rdates();
+const rdates=()=>{
+  if(rng=='week')return week7();
+  if(rng=='month')return mdays(cur.slice(0,7));
+  const y=cur.slice(0,4);
+  const fromPlans=Object.keys(S.p[y]||{});
+  const fromDays=[];
+  for(const m in S.days){if(m.startsWith(y))for(const d in S.days[m])fromDays.push(d)}
+  return[...new Set([...fromPlans,...fromDays])].filter(d=>d.startsWith(y)).sort()
+};
+const hdates=()=>rng=='year'?rdates().filter(d=>{const x=day(d);return x&&Object.keys(x).length}):rdates();
 const avgS=a=>{const v=a.filter(z=>z!=null);return v.length?Math.round(v.reduce((x,y)=>x+y,0)/v.length):0};
 const rlab=()=>rng=='week'?'last 7 days':rng=='month'?parse(cur.slice(0,7)+'-01').toLocaleDateString('en',{month:'long',year:'numeric'}):cur.slice(0,4);
-const mon1=m=>new Date(2000,m-1,1).toLocaleDateString('en',{month:'narrow'});
 
 let ccs={};
 function vChart(k,items,wk){const C=CATS[k],ix=ccs[k],sel=ix!=null&&ix<items.length?items[ix]:null;
@@ -414,25 +499,39 @@ function catChart(k){const C=CATS[k];
   const y=cur.slice(0,4),ds=k=='health'?hdates():rdates();
   const items=[...Array(12)].map((_,i)=>{const k2=y+'-'+pad2(i+1),v=ds.filter(d=>d.startsWith(k2)).map(C.f).filter(x=>x!=null);return{n:mon3(i+1),l:mon3(i+1),v:v.length?avgS(v):null}});
   return `<div class="card"><h3>${y} · ${C.n} average by month</h3>${vChart(k,items,false)}</div>`}
+function heatmap(valueFn){const y=cur.slice(0,4);
+  const start=parse(y+'-01-01'),align=new Date(start);
+  align.setDate(align.getDate()-((align.getDay()+6)%7));
+  let html='';
+  for(let w=0;w<53;w++)for(let d=0;d<7;d++){
+    const dt=new Date(align);dt.setDate(dt.getDate()+w*7+d);const ds=iso(dt);
+    if(!ds.startsWith(y)){html+='<div></div>';continue}
+    const v=valueFn(ds);
+    html+=`<div class="${v>0?'hm-'+Math.min(4,Math.floor(v/25)+1):''}" title="${ds} · ${v==null?'—':Math.round(v)}%"></div>`;
+  }
+  return `<div class="heat">${html}</div>`}
+function yearHeat(k){const C=CATS[k];return `<div class="card"><h3>${cur.slice(0,4)} · ${C.n} heatmap</h3>${heatmap(d=>C.f(d))}<small>Each cell is a day. Brighter = higher score.</small></div>`}
 function healthSum(){const ds=rdates();
   if(rng=='week'){const a=k=>Math.round(ds.reduce((t,d)=>t+(day(d)[k]||0),0)/7*10)/10;
     return `<div class="card grid"><div><b>${Math.round(ds.reduce((t,d)=>t+pct(d),0)/7)}%</b><small>avg score</small></div><div><b>${a('water')}</b><small>avg water L</small></div><div><b>${a('protein')}</b><small>avg protein g</small></div><div><b>${streak()}</b><small>day streak</small></div></div>`}
   if(rng=='month')return `<div class="card"><b>${Math.round(ds.reduce((t,d)=>t+pct(d),0)/ds.length)}%</b> <span class="mu">average score · ${streak()} day streak</span></div>`;
-  return ''}
+  const v=ds.map(d=>pct(d)).filter(x=>x!=null);
+  return `<div class="card grid"><div><b>${v.length?Math.round(v.reduce((a,b)=>a+b,0)/v.length):0}%</b><small>avg score</small></div><div><b>${streak()}</b><small>day streak</small></div><div><b>${ds.filter(d=>pct(d)>=STREAK_AT).length}</b><small>good days</small></div><div><b>${ds.length}</b><small>days tracked</small></div></div>`
+}
 const hrs=(ds,fn)=>ds.reduce((a,d)=>{const p=fn(d);a.t+=p.t;a.d+=p.d;return a},{t:0,d:0});
 function collegeSum(){const ds=rdates(),c=S.c,h=hrs(ds,planSum),asg=c.subs.filter(u=>u.bl!=2).reduce((a,u)=>a+asgLeft(u),0),syl=c.subs.length?Math.round(c.subs.reduce((a,u)=>a+sylP(u),0)/c.subs.length):0;
   return `<div class="card grid"><div><b>${avgS(ds.map(CATS.college.f))}%</b><small>avg study</small></div><div><b>${+h.d.toFixed(1)}/${+h.t.toFixed(1)}</b><small>hours done</small></div><div><b>${asg}</b><small>assignments left</small></div><div><b>${syl}%</b><small>syllabus done</small></div></div>`}
 function selfSum(){const ds=rdates(),f=S.f,h=hrs(ds,selfPlan),nt=f.topics.reduce((a,x)=>a+(x.notes||[]).filter(n=>!n.d).length,0);
   return `<div class="card grid"><div><b>${avgS(ds.map(CATS.self.f))}%</b><small>avg growth</small></div><div><b>${+h.d.toFixed(1)}/${+h.t.toFixed(1)}</b><small>hours done</small></div><div><b>${nt}</b><small>notes to cover</small></div><div><b>${f.topics.length}</b><small>topics</small></div></div>`}
 function mgroups(){const y=cur.slice(0,4);
-  if(rng=='year')return[...Array(12)].map((_,i)=>({l:mon1(i+1),n:mon3(i+1),it:S.money[y+'-'+pad2(i+1)]||[]}));
+  if(rng=='year')return[...Array(12)].map((_,i)=>({l:mon3(i+1),n:mon3(i+1),it:S.money[y+'-'+pad2(i+1)]||[]}));
   const ds=rng=='week'?week7():mdays(cur.slice(0,7));
   return ds.map((d,i)=>({n:sd2(d),l:rng=='week'?sd2(d):((i+1)%5==1?String(i+1):'\u00a0'),it:(S.money[d.slice(0,7)]||[]).filter(x=>x.d==d)}))}
 function sMoney(){const gs=mgroups().map(g=>Object.assign({},g,{i:sum(g.it,'in'),o:sum(g.it,'out')})),mx=Math.max(1,...gs.map(g=>Math.max(g.i,g.o))),
   tin=gs.reduce((a,g)=>a+g.i,0),tout=gs.reduce((a,g)=>a+g.o,0),H=v=>v>0?Math.max(3,Math.round(100*v/mx)):0,cats={},mo=rng=='month',wk=rng=='week';
   gs.forEach(g=>g.it.filter(i=>i.t=='out').forEach(i=>{const c=i.c||'Other';cats[c]=(cats[c]||0)+i.a}));
   const cl=Object.entries(cats).sort((a,b)=>b[1]-a[1]).slice(0,5);
-  const act=gs.filter(g=>g.i||g.o),shown=mo?act:gs;
+  const act=gs.filter(g=>g.i||g.o);
   const sel=mcs>=0&&mcs<gs.length?gs[mcs]:null,lab=g=>rng=='year'?g.n:g.l;
   const chart=act.length?`<div class="cols mcols${wk?' wk':''}">${gs.map((g,k)=>`<button class="col mcol${mcs==k?' sel':''}" data-act="mcol" data-i="${k}" aria-label="${esc(g.n)}: received ${fmtC(g.i)}, spent ${fmtC(g.o)}"><span class="cb mb"><i class="mi" style="height:${H(g.i)}%"></i><i class="mo" style="height:${H(g.o)}%"></i></span><small>${lab(g)}</small>${wk?`<small class="in">${g.i?fmtC(g.i):'\u00a0'}</small><small class="out">${g.o?fmtC(g.o):'\u00a0'}</small>`:''}</button>`).join('')}</div>
     <div class="mrd">${sel?`<b>${esc(sel.n)}</b> ${sel.i||sel.o?`${sel.i?`<span class="in">+${fmtC(sel.i)}</span>`:''} ${sel.o?`<span class="out">−${fmtC(sel.o)}</span>`:''}`:'<em>no entries</em>'}`:'<em>Tap a bar to see its amounts</em>'}</div>
@@ -444,9 +543,9 @@ function overview(){const net=mgroups().reduce((a,g)=>a+sum(g.it,'in')-sum(g.it,
   return `<div class="card"><h3>Overview · ${rlab()}</h3><div class="grid"><div><b>${avgS(hdates().map(CATS.health.f))}%</b><small>health</small></div><div><b>${avgS(rdates().map(CATS.college.f))}%</b><small>college</small></div><div><b>${avgS(rdates().map(CATS.self.f))}%</b><small>self</small></div><div><b class="${net<0?'out':'in'}">${fmtC(net)}</b><small>money net</small></div></div></div>`}
 function moneySm(){return fmtC(mgroups().reduce((a,g)=>a+sum(g.it,'out'),0))+' spent'}
 function vStats(){const A2=(k,t,sm,b)=>acc('st-'+k,t,sm,b);
-  const F={health:()=>A2('health','Health',avgS(hdates().map(CATS.health.f))+'% avg',catChart('health')+healthSum()),
-   college:()=>A2('college','College',avgS(rdates().map(CATS.college.f))+'% avg',catChart('college')+collegeSum()),
-   self:()=>A2('self','Self',avgS(rdates().map(CATS.self.f))+'% avg',catChart('self')+selfSum()),
+  const F={health:()=>A2('health','Health',avgS(hdates().map(CATS.health.f))+'% avg',catChart('health')+healthSum()+yearHeat('health')),
+   college:()=>A2('college','College',avgS(rdates().map(CATS.college.f))+'% avg',catChart('college')+collegeSum()+yearHeat('college')),
+   self:()=>A2('self','Self',avgS(rdates().map(CATS.self.f))+'% avg',catChart('self')+selfSum()+yearHeat('self')),
    money:()=>A2('money','Money',moneySm(),sMoney())};
   return `<div class="seg">${['week','month','year'].map(r=>`<button data-act="rng" data-r="${r}" class="${rng==r?'on':''}">${({week:'7 days',month:'month',year:'year'})[r]}</button>`).join('')}</div>`
   +`<div class="chips">${[['all','All'],['health','Health'],['college','College'],['self','Self'],['money','Money']].map(([k,l])=>`<button data-act="sc" data-k="${k}" class="${sc==k?'on':''}">${l}</button>`).join('')}</div>`
@@ -458,7 +557,7 @@ const moneyBal=m=>{const it=S.money[m]||[];return sum(it,'in')-sum(it,'out')};
 function vMoney(){const it=S.money[mon]||[],s=S.s,inc=sum(it,'in'),out=sum(it,'out'),cats={};
   it.filter(i=>i.t=='out').forEach(i=>cats[i.c||'Other']=(cats[i.c||'Other']||0)+i.a);
   const cl=Object.entries(cats).sort((a,b)=>b[1]-a[1]),dd=cur.startsWith(mon)?cur:mon+'-01';
-  const ecat={};it.forEach(i=>{const c=i.c||'Other';ecat[c]=(ecat[c]||0)+1});const ecl=Object.keys(ecat).sort((a,b)=>ecat[b]-ecat[a]);if(mc&&!ecat[mc])mc='';
+  const ecat={};it.forEach(i=>{const c=i.c||'Other';ecat[c]=(ecat[c]||0)+1});const ecl=Object.keys(ecat).sort((a,b)=>ecat[b]-ecat[a]);
   return `<div class="hd"><button data-act="mnav" data-s="-1">‹</button><b>${parse(mon+'-01').toLocaleDateString('en',{month:'long',year:'numeric'})}</b><button data-act="mnav" data-s="1">›</button></div>
   <div class="card grid" style="grid-template-columns:repeat(3,1fr)"><div><b class="in">${fmt(inc)}</b><small>in</small></div><div><b class="out">${fmt(out)}</b><small>spent</small></div><div><b>${fmt(inc-out)}</b><small>balance</small></div></div>`
   +acc('m-budget','Budget',s.budget>0?`${fmt(out)} / ${fmt(s.budget)}`:'not set',`<div class="row" style="border:0;padding-top:0"><span>Monthly budget (₹)</span><input data-act="cfg" data-k="budget" type="number" value="${s.budget}" style="width:110px"></div>${s.budget>0?`<div class="bar"><i style="width:${Math.min(100,Math.round(100*out/s.budget))}%;${out>s.budget?'background:var(--bad)':''}"></i></div><small>${fmt(out)} of ${fmt(s.budget)}</small>`:''}`)
@@ -483,7 +582,9 @@ const arm=k=>{if(armed==k){armed=null;return true}armed=k;return false};
 let armT=0;
 function delTx(id){const k='tx'+id;clearTimeout(armT);
   if(!arm(k)){armT=setTimeout(()=>{if(armed==k){armed=null;const l=$('#txl');if(l)l.innerHTML=txBody()}},4000);return}
-  S.money[mon]=(S.money[mon]||[]).filter(i=>String(i.id)!==String(id));saveMoney(mon)}
+  const touched=[];
+  for(const m in S.money){const b=S.money[m].length;S.money[m]=S.money[m].filter(i=>String(i.id)!==String(id));if(S.money[m].length!==b)touched.push(m)}
+  touched.forEach(m=>saveMoney(m))}
 const sylP=u=>u.ch.length?Math.round(100*u.ch.filter(c=>c.d).length/u.ch.length):0;
 const asgLeft=u=>u.as.filter(a=>!a.d).length;
 const BL=['Regular','Backlog pending','Backlog cleared'];
@@ -512,7 +613,7 @@ function cSub(){const u=sub(selSub);if(!u){cv='main';return cMain()}
   <div class="card"><h3>Syllabus PDFs</h3>${fl('syl')}${up('syl','syllabus PDF')}</div>
   <div class="card"><h3>PYQ papers</h3>${fl('pyq')}${up('pyq','PYQ PDF')}${err?`<small class="out">${err}</small>`:''}</div>
   <button data-act="delsub" style="width:100%">${armed=='sub'+u.id?'Tap again to delete this subject':'Delete subject'}</button>`}
-function colClick(b,a){const c=S.c,d=b.dataset;if(!/^del(f|sub|sem|tp|bk|tx)$/.test(a))armed=null;
+function colClick(b,a){const c=S.c,d=b.dataset;if(!/^(delf|delsub|delsem|deltp|deltx)$/.test(a))armed=null;
   if(a=='cgo'){cv=d.v;err=''}
   else if(a=='osub'){const u=sub(d.id);selSub=u.id;selSem=u.sem;cv='sub';err=''}
   else if(a=='osem'){selSem=d.id;cv='sem'}
@@ -586,17 +687,23 @@ const hasP=P=>!!(P&&((P.ex||[]).length||(P.fd||[]).length||(P.study||[]).length|
 const fz2p=f=>({ex:f.rest?['Rest']:f.ex.slice(),fd:f.fd.slice(),study:f.study.slice(),self:f.self.slice(),td:[]});
 function dp(d){const r=(S.p[d.slice(0,4)]||{})[d];if(r)return r;const f=day(d).fz;return f?fz2p(f):{}}
 function tg(d){const l=(S.s.tv||[]).filter(x=>x.from<=d).sort((a,b)=>a.from.localeCompare(b.from));return l.length?l[l.length-1]:{wake:S.s.wake,sleep:S.s.sleep,wmin:S.s.wmin,wmax:S.s.wmax,protein:S.s.protein}}
-function plan(d){const P=dp(d),f=day(d).fz,T=f||tg(d),ex=P.ex||[],rest=isRest(ex);
-  return{wake:T.wake,sleep:T.sleep,wmin:T.wmin,wmax:T.wmax,protein:T.protein,rest,ex:rest?[]:ex,fd:P.fd||[],study:P.study||[],self:P.self||[],td:P.td||[]}}
 function setP(d,patch){const y=d.slice(0,4);S.p[y]=S.p[y]||{};const o=Object.assign(JSON.parse(JSON.stringify(dp(d))),patch);
   if(!hasP(o)&&!day(d).fz)delete S.p[y][d];else S.p[y][d]=o;savePlans(y)}
 function purgeFuture(kind,id){const t=iso(new Date()),k=kind=='study'?'study':'self',key=kind=='study'?'s':'id';
   for(const y in S.p){let ch=false;for(const d in S.p[y])if(d>=t){const P=S.p[y][d],a=P[k]||[],b=a.filter(i=>i[key]!=id);if(b.length!=a.length){P[k]=b;ch=true}}if(ch)savePlans(y)}}
-function migrateWeekly(){const t=iso(new Date()),y=t.slice(0,4);S.p[y]=S.p[y]||{};let d=t;
-  while(d.slice(0,4)==y){const k=dk(d);if(!S.p[y][d]){const o={ex:(S.s.ex[k]||[]).slice(),fd:(S.s.fd[k]||[]).slice(),td:[],
-    study:((S.c.plan||{})[k]||[]).map(i=>({s:i.s,h:i.h,nm:(sub(i.s)||{}).n||''})),
-    self:S.f.topics.filter(x=>((x.sch||{})[k]||{}).h>0).map(x=>({id:x.id,n:x.n,h:x.sch[k].h,at:x.sch[k].at||''}))};if(hasP(o))S.p[y][d]=o}d=addD(d,1)}
-  savePlans(y);S.s.mig=1;saveSet()}
+function migrateWeekly(){
+  const t=iso(new Date()),end=String(+t.slice(0,4)+1)+'-12-31';let d=t;const yrs=new Set();
+  while(d<=end){
+    const y=d.slice(0,4);S.p[y]=S.p[y]||{};yrs.add(y);
+    if(!S.p[y][d]){const k=dk(d);const o={ex:(S.s.ex[k]||[]).slice(),fd:(S.s.fd[k]||[]).slice(),td:[],
+      study:((S.c.plan||{})[k]||[]).map(i=>({s:i.s,h:i.h,nm:(sub(i.s)||{}).n||''})),
+      self:S.f.topics.filter(x=>((x.sch||{})[k]||{}).h>0).map(x=>({id:x.id,n:x.n,h:x.sch[k].h,at:x.sch[k].at||''}))};
+      if(hasP(o))S.p[y][d]=o}
+    d=addD(d,1)
+  }
+  for(const y of yrs)savePlans(y);
+  S.s.mig=1;saveSet()
+}
 function vPlan(){const P=dp(pd),T=tg(pd),t0=iso(new Date()),f=parse(pm+'-01'),n=new Date(f.getFullYear(),f.getMonth()+1,0).getDate(),off=(f.getDay()+6)%7;let c='';
   ['M','T','W','T','F','S','S'].forEach(w=>c+=`<div class="h">${w}</div>`);for(let i=0;i<off;i++)c+='<div class="h"></div>';
   for(let i=1;i<=n;i++){const d=pm+'-'+String(i).padStart(2,'0');c+=`<button data-act="psel" data-d="${d}" class="${hasP(dp(d))?'has ':''}${d==pd?'sel ':''}${d==t0?'tod':''}">${i}</button>`}
@@ -606,7 +713,8 @@ function vPlan(){const P=dp(pd),T=tg(pd),t0=iso(new Date()),f=parse(pm+'-01'),n=
   const tx=(l,f2,v,h)=>`<small style="margin-top:6px">${l}</small><textarea data-act="ptx" data-f="${f2}" placeholder="${h||''}">${esc((v||[]).join('\n'))}</textarea>`;
   const ex=(P.ex||[]).length,fd=(P.fd||[]).length,td=(P.td||[]).length,sh=(P.study||[]).reduce((a,i)=>a+i.h,0),fh=(P.self||[]).reduce((a,i)=>a+i.h,0);
   return `<div class="hd"><button data-act="pmnav" data-s="-1">‹</button><b>${f.toLocaleDateString('en',{month:'long',year:'numeric'})}</b><button data-act="pmnav" data-s="1">›</button></div>
-  <div class="card"><div class="cal">${c}</div><small style="margin-top:6px">Blue dates already have a plan. Tap a date to plan it.</small></div>`
+  <div class="card"><div class="cal">${c}</div><small style="margin-top:6px">Blue dates already have a plan. Tap a date to plan it.</small>
+  <div class="st" style="margin-top:10px"><button data-act="copywd">Copy from last ${DN[dk(pd)]}</button><button data-act="copynext" data-n="7">Copy → next 7 days</button><button data-act="copynext" data-n="30">→ 30 days</button></div></div>`
   +acc('p-for','Plan for '+dlabel(pd),`${ex} exercise · ${fd} food · ${td} tasks`,`<div class="row" style="border:0;padding-top:0"><span class="mu">Date</span><input type="date" value="${pd}" data-act="pdate"></div>${pd<t0?'<small>Past date: changing it changes that day\'s score.</small>':''}${tx('Exercise (one per line, write Rest for a rest day)','ex',P.ex)}${tx('Food (one per line)','fd',P.fd)}${tx('Tasks for this date (one per line)','td',P.td)}`)
   +acc('p-study','Study',`${(P.study||[]).length} subjects · ${sh}h`,`${sr||'<p class="mu" style="margin:0">No study planned.</p>'}<button data-act="pstadd" style="width:100%;margin-top:6px">+ Add subject</button>${S.c.subs.length?'':'<small>Add subjects in College first.</small>'}`)
   +acc('p-self','Self',`${(P.self||[]).length} topics · ${fh}h`,`${fr||'<p class="mu" style="margin:0">Nothing planned.</p>'}<button data-act="psfadd" style="width:100%;margin-top:6px">+ Add topic</button>`)
@@ -623,8 +731,11 @@ function planClick(b,a){const d=b.dataset;
   else if(a=='pstdel')setP(pd,{study:(dp(pd).study||[]).filter((_,i)=>i!=+d.i)});
   else if(a=='psfadd'){const u=S.f.topics[0];if(u)setP(pd,{self:[...(dp(pd).self||[]),{id:u.id,n:u.n,h:1,at:''}]})}
   else if(a=='psfdel')setP(pd,{self:(dp(pd).self||[]).filter((_,i)=>i!=+d.i)});
+  else if(a=='copywd'){let s=addD(pd,-7);while(s>=addD(pd,-70)&&!hasP(dp(s)))s=addD(s,-7);if(hasP(dp(s)))setP(pd,JSON.parse(JSON.stringify(dp(s))))}
+  else if(a=='copynext'){const n=+d.n,src=JSON.parse(JSON.stringify(dp(pd)));if(!hasP(src))return true;for(let i=1;i<=n;i++)setP(addD(pd,i),JSON.parse(JSON.stringify(src)))}
   else if(a=='tsave'){const fr=$('#tf').value||iso(new Date()),e={from:fr,wake:$('#tw').value||'05:30',sleep:$('#ts').value||'22:00',wmin:+$('#tmn').value||0,wmax:+$('#tmx').value||0,protein:+$('#tpr').value||0};
-    if(e.wmax<e.wmin)e.wmax=e.wmin;S.s.tv=(S.s.tv||[]).filter(x=>x.from!=fr).concat(e);saveSet()}
+    if(e.wmin<0)e.wmin=0;if(e.wmax<0)e.wmax=0;if(e.wmax<e.wmin)e.wmax=e.wmin;if(e.protein<0)e.protein=0;
+    S.s.tv=(S.s.tv||[]).filter(x=>x.from!=fr).concat(e);saveSet()}
   else return false;
   return true}
 function planChange(t,a){const d=t.dataset;
@@ -636,7 +747,7 @@ function planChange(t,a){const d=t.dataset;
   else return false;
   return true}
 
-/* ---- UI options + settings (only reachable from the left menu) ---- */
+/* ---- UI options + settings ---- */
 const PDEF={blur:2,glass:1,corner:1,anim:1,swipe:1,theme:0,mode:0},BLUR=[0,6,11,18],BLABEL=['Off','Soft','Medium','Strong'];
 let PREF=Object.assign({},PDEF);
 try{PREF=Object.assign({},PDEF,JSON.parse(localStorage.getItem('lt:pref')||'{}'))}catch(e){}
@@ -672,8 +783,31 @@ let tx0=null,ty0=0;
 document.addEventListener('touchstart',e=>{const t=e.touches[0];tx0=t.clientX;ty0=t.clientY},{passive:true});
 document.addEventListener('touchend',e=>{if(tx0==null)return;const t=e.changedTouches[0],dx=t.clientX-tx0,dy=Math.abs(t.clientY-ty0),open=$('#drawer').classList.contains('open');
   if(!open&&PREF.swipe&&tx0<22&&dx>70&&dy<50)openMenu();else if(open&&dx<-60&&dy<50)closeMenu();tx0=null},{passive:true});
+
+function digest(){
+  const p=pct(cur),s=planSum(cur),se=selfPlan(cur),x=day(cur);
+  const spent=sum((S.money[cur.slice(0,7)]||[]).filter(i=>i.d==cur),'out');
+  const mood=x.mood?['😞','😐','🙂','😊','😁'][x.mood-1]:'';
+  return `${parse(cur).toLocaleDateString('en',{weekday:'short',day:'numeric',month:'short',year:'numeric'})}\n`+
+    `Health    ${p}%   (streak: ${streak()} days)\n`+
+    `College   ${s.d}/${s.t}h\n`+
+    `Self      ${se.d}/${se.t}h\n`+
+    `Money     ${fmtC(spent)} spent today, ${moneyLeft()}\n`+
+    (mood?`Mood      ${mood}\n`:'')+
+    `Pending   ${(()=>{const p=homeFeedCount();return p?p+' items':'clear'})()}`
+}
+function homeFeedCount(){const x=day(cur),dn=x.done||{},P=plan(cur);let n=0;
+  if(!dn.wake)n++;P.ex.forEach(t=>{if(!dn['e:'+t])n++});P.fd.forEach(t=>{if(!dn['f:'+t])n++});
+  if(!dn.sleep)n++;const sp=planSum(cur);n+=sp.pl.filter(i=>!sp.sd[i.s]).length;
+  const se=selfPlan(cur);n+=se.it.filter(i=>!se.dn[i.id]).length;return n}
+
 async function render(){
-  const y=+cur.slice(0,4);await ensureYear(String(y));await ensureYear(String(y-1));await ensureMon(cur.slice(0,7));await ensureMon(mon);if(tab=='stats'){for(let m=1;m<=12;m++)await ensureMon(cur.slice(0,4)+'-'+pad2(m));await ensureMon(addD(cur,-6).slice(0,7))}await ensurePlans(String(y));await ensurePlans(pm.slice(0,4));await ensurePlans(pd.slice(0,4));
+  const m=cur.slice(0,7);await ensureDayMon(m);
+  const y=+cur.slice(0,4);
+  await ensureMon(cur.slice(0,7));await ensureMon(mon);
+  if(tab=='stats'){for(let i=1;i<=12;i++)await ensureMon(cur.slice(0,4)+'-'+pad2(i));await ensureMon(addD(cur,-6).slice(0,7))}
+  await ensurePlans(String(y));await ensurePlans(pm.slice(0,4));await ensurePlans(pd.slice(0,4));
+  _planCache=null;
   const nm={home:'Home',health:'Health',college:'College',self:'Self',plan:'Plan',stats:'Stats',money:'Money',uiopt:'UI Options',settings:'Settings'};
   if(!$('#drawer').children.length)buildDrawer();
   const mo=$('#drawer').classList.contains('open');
@@ -681,7 +815,9 @@ async function render(){
   document.querySelectorAll('#drawer .dit').forEach(b=>b.classList.toggle('cur',b.dataset.t==tab));
   const hd=(tab=='health'||tab=='stats'||(tab=='college'&&cv=='main')||(tab=='self'&&sv=='main'))&&!editing?`<div class="hd"><button data-act="dnav" data-s="-1">‹</button><b>${cur==iso(new Date())?'Today · ':''}${dlabel(cur)}</b><button data-act="dnav" data-s="1">›</button></div>`:'';
   const fl0=$('.feedl'),sy0=fl0?fl0.scrollTop:0;
-  $('#v').innerHTML=hd+({home:vHome,health:vHealth,college:vCollege,self:vSelf,plan:vPlan,stats:vStats,money:vMoney,uiopt:vUiOpt,settings:vSettings}[tab])();const fl1=$('.feedl');if(fl1&&sy0)fl1.scrollTop=sy0;lvCheck();
+  $('#v').innerHTML=hd+({home:vHome,health:vHealth,college:vCollege,self:vSelf,plan:vPlan,stats:vStats,money:vMoney,uiopt:vUiOpt,settings:vSettings}[tab])();
+  const fl1=$('.feedl');if(fl1&&sy0)fl1.scrollTop=sy0;
+  lvCheck();
 }
 function capture(){}
 
@@ -693,8 +829,8 @@ document.addEventListener('click',async e=>{
     mq=inp.value;inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length);
     const l=$('#txl');if(l)l.innerHTML=txBody();const qx=document.querySelector('.qx');if(a=='mclr'&&qx)qx.remove();return}
   if(a!='deltx'&&typeof armed=='string'&&armed.startsWith('tx'))armed=null;
-  if(a=='go'){capture();editing=false;tab=b.dataset.t;fa=true}
-  else if(a=='dnav'){cur=addD(cur,+b.dataset.s);mcs=-1;ccs={}}
+  if(a=='go'){capture();editing=false;armed=null;clearTimeout(armT);tab=b.dataset.t;fa=true}
+  else if(a=='dnav'){armed=null;clearTimeout(armT);cur=addD(cur,+b.dataset.s);mcs=-1;ccs={}}
   else if(a=='rng'){rng=b.dataset.r;mcs=-1;ccs={}}
   else if(a=='pref'){PREF[b.dataset.k]=+b.dataset.v;savePref()}
   else if(a=='prefreset'){PREF=Object.assign({},PDEF);savePref()}
@@ -703,10 +839,15 @@ document.addEventListener('click',async e=>{
   else if(a=='deltx'){delTx(b.dataset.id)}
   else if(a=='mcol')mcs=mcs==+b.dataset.i?-1:+b.dataset.i;
   else if(a=='ccol'){const k=b.dataset.k,i=+b.dataset.i;ccs[k]=ccs[k]===i?null:i}
+  else if(a=='pause'){const n=+b.dataset.n;for(let i=0;i<n;i++){const d=addD(cur,i);setDay(d,{pause:true})}}
+  else if(a=='unpause'){setDay(cur,{pause:false})}
+  else if(a=='mood'){const v=+b.dataset.v;setDay(cur,{mood:day(cur).mood==v?0:v})}
+  else if(a=='energy'){const v=+b.dataset.v;setDay(cur,{energy:day(cur).energy==v?0:v})}
+  else if(a=='digest'){const t=digest();navigator.clipboard?.writeText(t).catch(()=>{});alert(t)}
   else if(colClick(b,a)){}
   else if(selfClick(b,a)){}
   else if(planClick(b,a)){}
-  else if(a=='mnav')mon=shiftMon(mon,+b.dataset.s);
+  else if(a=='mnav'){mon=shiftMon(mon,+b.dataset.s);mc='';}
   else if(a=='step'){const k=b.dataset.k;setDay(cur,{[k]:Math.max(0,+((day(cur)[k]||0)+ +b.dataset.s).toFixed(2))})}
   else if(a=='addtx'){const amt=parseFloat($('#ta').value),d=$('#td').value||cur;if(!(amt>0))return $('#ta').focus();
     const m=d.slice(0,7);await ensureMon(m);S.money[m].push({id:uid0(),d,t:$('#tt').value,a:amt,c:$('#tc').value.trim(),n:$('#tn').value.trim()});saveMoney(m);mon=m}
@@ -726,6 +867,18 @@ document.addEventListener('change',e=>{
   else if(a=='cfg'){const k=t.dataset.k;S.s[k]=(k=='wake'||k=='sleep')?(t.value||S.s[k]):Math.max(0,parseFloat(t.value)||0);if(S.s.wmax<S.s.wmin)S.s.wmax=S.s.wmin;saveSet();if(k=='budget')return render()}
   if(a!='cfg')render()});
 
-(async()=>{await init();S.s=Object.assign(DEF(),await load('health',{}));S.c=Object.assign(CDEF(),await load('college',{}));S.f=Object.assign(SDEF(),await load('self',{}));const y0=+cur.slice(0,4);for(let i=y0-5;i<=y0;i++)await ensureYear(String(i));for(let i=y0-5;i<=y0+2;i++)await ensurePlans(String(i));if(!S.s.mig){freezeSync();migrateWeekly()}await render();lvCheck()})();
+(async()=>{
+  await init();
+  S.s=Object.assign(DEF(),await load('health',{}));
+  S.c=Object.assign(CDEF(),await load('college',{}));
+  S.f=Object.assign(SDEF(),await load('self',{}));
+  await migrateDayShards();
+  await loadAllDayMonths();
+  const y0=+cur.slice(0,4);
+  for(let i=y0-5;i<=y0+2;i++)await ensurePlans(String(i));
+  if(!S.s.mig){freezeSync();migrateWeekly()}
+  await render();
+  lvCheck()
+})();
 </script>
 </body></html>
