@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Life Tracker server.
 
-Serves the web UI (static/index.html) and stores all data in a SQLite file.
-Python standard library only (3.8+). Run:  python3 server.py
-GUIDE.md explains what every part of this file does.
+Serves the web UI (static/index.html + static/styles.css + static/app.js) and
+stores all data in a SQLite file. Python standard library only (3.8+).
+Run: python3 server.py
 """
 import argparse
 import base64
@@ -27,20 +27,19 @@ from urllib.parse import quote, unquote, urlparse
 
 # ---------------------------------------------------------------- 1. CONFIG
 BASE = Path(__file__).resolve().parent
-DATA = Path(os.environ.get("TRACKER_DATA", BASE / "data"))  # ALL your data lives here
+DATA = Path(os.environ.get("TRACKER_DATA", BASE / "data"))
 DB_PATH, FILES, BACKUPS = DATA / "tracker.db", DATA / "files", DATA / "backups"
 STATIC = BASE / "static"
-MAX_DOC = 2 * 1024 * 1024            # biggest single JSON document
-MAX_DOC_DAYS = 8 * 1024 * 1024       # bigger limit for legacy days-YYYY docs
-MAX_UPLOAD = 50 * 1024 * 1024        # biggest uploaded file
+MAX_DOC = 2 * 1024 * 1024
+MAX_DOC_DAYS = 8 * 1024 * 1024
+MAX_UPLOAD = 50 * 1024 * 1024
 ALLOWED_TYPES = {"application/pdf", "image/png", "image/jpeg"}
-HISTORY_KEEP = 30                    # old versions kept per document
-HISTORY_MIN_GAP = 600                # seconds between saved old versions
+HISTORY_KEEP = 30
+HISTORY_MIN_GAP = 600
 DAILY_BACKUPS_KEEP = 30
 
 
 def doc_limit(name):
-    """Per-document size limit. Day shards are small; legacy days-YYYY larger."""
     if re.fullmatch(r"days-\d{4}", name):
         return MAX_DOC_DAYS
     return MAX_DOC
@@ -48,7 +47,6 @@ def doc_limit(name):
 
 # --------------------------------------------- 2. DATABASE SCHEMA (APPEND ONLY)
 MIGRATIONS = [
-    # v1: documents (all app data), their history, and uploaded-file records
     """
     CREATE TABLE docs(
         name TEXT PRIMARY KEY,
@@ -116,7 +114,7 @@ def migrate():
         sys.exit("This database is from a newer server version. Update server.py first.")
     if have < len(MIGRATIONS):
         if have > 0:
-            backup(f"before-migration-v{have + 1}")  # safety copy before any change
+            backup(f"before-migration-v{have + 1}")
         for i in range(have, len(MIGRATIONS)):
             try:
                 con.executescript(f"BEGIN;{MIGRATIONS[i]};PRAGMA user_version={i + 1};COMMIT;")
@@ -140,7 +138,6 @@ def backup_loop():
 
 # ----------------------------------------------------------- 4. DATA ACCESS
 def put_doc(con, name, obj):
-    """Save one document. The previous version is kept in doc_history."""
     text = json.dumps(obj, separators=(",", ":"), ensure_ascii=False)
     old = con.execute("SELECT data FROM docs WHERE name=?", (name,)).fetchone()
     if old and old["data"] == text:
@@ -170,13 +167,19 @@ def put_doc(con, name, obj):
 
 
 # ------------------------------------------------------------ 5. HTTP SERVER
+STATIC_TYPES = {
+    "index.html": "text/html; charset=utf-8",
+    "styles.css": "text/css; charset=utf-8",
+    "app.js":     "application/javascript; charset=utf-8",
+}
+
+
 class Handler(BaseHTTPRequestHandler):
     server_version = "LifeTracker/1.1"
 
     def log_message(self, fmt, *args):
         pass
 
-    # --- helpers
     def _send(self, code, body=b"", ctype="application/json", extra=None):
         self.send_response(code)
         self.send_header("Content-Type", ctype)
@@ -192,7 +195,6 @@ class Handler(BaseHTTPRequestHandler):
         self._send(code, json.dumps(obj).encode())
 
     def _serve_file(self, f, ctype, name):
-        """Stream an uploaded file instead of loading it fully into memory."""
         size = f.stat().st_size
         self.send_response(200)
         self.send_header("Content-Type", ctype)
@@ -230,22 +232,23 @@ class Handler(BaseHTTPRequestHandler):
         self._send(401, b"", "text/plain", {"WWW-Authenticate": 'Basic realm="Life Tracker"'})
         return False
 
-    # --- HEAD (health probes)
     def do_HEAD(self):
         self._send(200, b"", "text/plain")
 
-    # --- GET
     def do_GET(self):
         if not self._auth():
             return
         path = self._path()
-        if path in ("/", "/index.html"):
-            return self._send(200, (STATIC / "index.html").read_bytes(),
-                              "text/html; charset=utf-8", {"Cache-Control": "no-cache"})
+        if path == "/":
+            path = "/index.html"
+        if path in ("/index.html", "/styles.css", "/app.js"):
+            f = STATIC / path.lstrip("/")
+            if f.is_file():
+                return self._send(200, f.read_bytes(), STATIC_TYPES[path.lstrip("/")],
+                                  {"Cache-Control": "no-cache"})
         if path == "/api/ping":
             return self._json(200, {"ok": True})
         if path == "/api/docs":
-            # Discovery: list of document names (used by the UI for day-shard loading)
             with conn() as con:
                 rows = con.execute("SELECT name FROM docs ORDER BY name").fetchall()
             return self._json(200, [r["name"] for r in rows])
@@ -283,7 +286,6 @@ class Handler(BaseHTTPRequestHandler):
             return self._serve_file(f, r["content_type"], r["name"])
         self._json(404, {"error": "not found"})
 
-    # --- PUT (save a document)
     def do_PUT(self):
         if not self._auth():
             return
@@ -304,7 +306,6 @@ class Handler(BaseHTTPRequestHandler):
         warn = "document is getting large" if n > lim * 0.8 else None
         self._json(200, {"ok": True, "changed": changed, "warn": warn})
 
-    # --- POST (upload a file / import a backup)
     def do_POST(self):
         if not self._auth():
             return
@@ -350,7 +351,6 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(200, {"ok": True, "documents": len(docs)})
         self._json(404, {"error": "not found"})
 
-    # --- DELETE (remove an uploaded file)
     def do_DELETE(self):
         if not self._auth():
             return
@@ -377,7 +377,8 @@ def lan_ip():
 
 def main():
     ap = argparse.ArgumentParser(description="Life Tracker server")
-    ap.add_argument("--host", default="127.0.0.1", help="use 0.0.0.0 to allow your phone on the same Wi-Fi")
+    ap.add_argument("--host", default="127.0.0.1",
+                    help="use 0.0.0.0 to allow your phone on the same Wi-Fi")
     ap.add_argument("--port", type=int, default=8000)
     args = ap.parse_args()
     migrate()

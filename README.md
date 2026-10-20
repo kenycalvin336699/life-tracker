@@ -4,6 +4,8 @@ A personal life-tracking web app that runs entirely on your own machine. One sma
 
 Pages: **Home · Health · College · Self · Plan · Stats · Money**, plus **UI Options** and **Settings**.
 
+**Themes** (menu → UI Options → Theme): *Classic* (blue system look), *Soft* (light or dark rounded look) and *Leather* (skeuomorphic: stitched leather cards, brushed-steel keys, brass plates, glass-tube gauges and paper fields on a walnut desk).
+
 ## Highlights
 
 - **Zero dependencies.** The backend uses only the Python standard library (3.8+).

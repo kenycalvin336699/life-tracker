@@ -1,0 +1,636 @@
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const parse=s=>{const[a,b,c]=s.split('-').map(Number);return new Date(a,b-1,c)};
+const addD=(s,n)=>{const d=parse(s);d.setDate(d.getDate()+n);return iso(d)};
+const shiftMon=(m,n)=>{const[y,mo]=m.split('-').map(Number);return iso(new Date(y,mo-1+n,1)).slice(0,7)};
+const fmt=n=>'₹'+Math.round(n).toLocaleString('en-IN');
+const uid0=()=>Math.random().toString(36).slice(2,8);
+const DAYS=['sun','mon','tue','wed','thu','fri','sat'],ORDER=['mon','tue','wed','thu','fri','sat','sun'],DN={sun:'Sunday',mon:'Monday',tue:'Tuesday',wed:'Wednesday',thu:'Thursday',fri:'Friday',sat:'Saturday'};
+let cur=iso(new Date()),tab='home',rng='week',mon=cur.slice(0,7),store=null,editing=false,editDay='mon';
+const S={s:null,days:{},money:{},p:{}};
+const DEF=()=>{const ex={},fd={};DAYS.forEach(k=>{ex[k]=k=='sun'?['Rest']:['Warm-up','Workout','Stretch'];fd[k]=['Breakfast','Lunch','Snack','Dinner']});return{wake:'05:30',sleep:'22:00',wmin:2,wmax:3,protein:100,budget:0,ex,fd}};
+const dk=d=>DAYS[parse(d).getDay()];
+const isRest=l=>l.length>0&&/^rest/i.test(l[0]);
+const tm=t=>{const[h,m]=t.split(':').map(Number);return(h%12||12)+':'+String(m).padStart(2,'0')+(h<12?' AM':' PM')};
+const lines=v=>v.split('\n').map(x=>x.trim()).filter(Boolean);
+
+/* ---- Theme-aware stroke SVG icons ---- */
+const ICONS={
+  home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg>',
+  health:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>',
+  college:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
+  self:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/></svg>',
+  plan:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+  stats:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
+  money:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>',
+  uiopt:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>',
+  settings:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>'
+};
+
+async function init(){try{const r=await fetch('/api/ping');store=r.ok}catch(e){}
+  A={upload:async f=>{const r=await fetch('/api/files',{method:'POST',headers:{'Content-Type':f.type||'application/pdf','X-Filename':encodeURIComponent(f.name)},body:f});if(!r.ok)throw new Error('upload');return r.json()},delete:id=>fetch('/api/files/'+id,{method:'DELETE'})}}
+async function load(n,def){let err=null;
+  try{const r=await fetch('/api/doc/'+n);if(r.status==404)return def;if(r.ok)return await r.json();err=r.status}catch(e){}
+  try{const v=localStorage.getItem('lt:'+n);if(v){if(err&&err>=500)console.warn('load('+n+'): server '+err+', using cached copy');return JSON.parse(v)}return def}catch(e){return def}}
+const timers={},pend={};
+function banner(){const b=$('#off');if(b)b.style.display=Object.keys(pend).length?'block':'none'}
+function flush(){Object.keys(pend).forEach(n=>{const o=pend[n];fetch('/api/doc/'+n,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(o)}).then(r=>{if(!r.ok)throw 0;if(pend[n]===o)delete pend[n];banner()}).catch(banner)});banner()}
+function save(n,o){try{localStorage.setItem('lt:'+n,JSON.stringify(o))}catch(e){}pend[n]=o;clearTimeout(timers[n]);timers[n]=setTimeout(flush,400)}
+setInterval(()=>{if(Object.keys(pend).length)flush()},5000);
+document.addEventListener('visibilitychange',()=>{if(document.hidden){Object.keys(timers).forEach(k=>clearTimeout(timers[k]));flush()}});
+
+// ---- days are sharded by month (days-YYYY-MM). Loader + migration -----------
+const ensureDayMon=async m=>{if(S.days[m])return;S.days[m]=(await load('days-'+m,{days:{}})).days||{}};
+const saveDays=m=>save('days-'+m,{days:S.days[m]});
+const day=d=>((S.days[d.slice(0,7)]||{})[d])||{};
+function setDay(d,p){const m=d.slice(0,7);S.days[m]=S.days[m]||{};const o=S.days[m][d]||{done:{}};if(!o.done)o.done={};S.days[m][d]=Object.assign(o,p);saveDays(m)}
+
+async function migrateDayShards(){
+  if(S.s&&S.s.dv===2)return;
+  let names=[];
+  try{const r=await fetch('/api/docs');if(r.ok)names=await r.json()}catch(e){}
+  const years=names.filter(n=>/^days-\d{4}$/.test(n)).map(n=>n.slice(5));
+  for(const y of years){
+    let old=null;
+    try{const r=await fetch('/api/doc/days-'+y);if(r.ok)old=await r.json()}catch(e){}
+    if(!old||!old.days)continue;
+    const byMonth={};
+    for(const d in old.days){const m=d.slice(0,7);(byMonth[m]=byMonth[m]||{days:{}}).days[d]=old.days[d]}
+    for(const m in byMonth){
+      let existing=null;
+      try{const r=await fetch('/api/doc/days-'+m);if(r.ok)existing=await r.json()}catch(e){}
+      const merged=existing&&existing.days?Object.assign({},existing.days,byMonth[m].days):byMonth[m].days;
+      try{await fetch('/api/doc/days-'+m,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({days:merged})})}catch(e){}
+    }
+  }
+  S.s.dv=2;saveSet();
+}
+
+async function loadAllDayMonths(){
+  let names=[];
+  try{const r=await fetch('/api/docs');if(r.ok)names=await r.json()}catch(e){}
+  const months=names.filter(n=>/^days-\d{4}-\d{2}$/.test(n)).map(n=>n.slice(5));
+  const seen=new Set(months);
+  for(let i=0;i<18;i++){const d=addD(cur,-i*30);const m=d.slice(0,7);if(!seen.has(m)){months.push(m);seen.add(m)}}
+  for(const m of months)await ensureDayMon(m);
+}
+
+const ensureMon=async m=>{if(!S.money[m]){S.money[m]=(await load('money-'+m,{items:[]})).items||[];
+  let fx=false;S.money[m].forEach(i=>{if(i.id==null||i.id===''){i.id=uid0()+uid0();fx=true}});if(fx)saveMoney(m)}};
+const saveMoney=m=>save('money-'+m,{items:S.money[m]}),saveSet=()=>save('health',S.s);
+
+// ---- plan cache (bug #13) ---------------------------------------------------
+let _planCache=null;
+function plan(d){
+  if(_planCache&&_planCache.has(d))return _planCache.get(d);
+  const r=_plan(d);
+  if(!_planCache)_planCache=new Map();
+  _planCache.set(d,r);
+  return r;
+}
+function _plan(d){const P=dp(d),f=day(d).fz,T=f||tg(d),ex=P.ex||[],rest=isRest(ex);
+  return{wake:T.wake,sleep:T.sleep,wmin:T.wmin,wmax:T.wmax,protein:T.protein,rest,ex:rest?[]:ex,fd:P.fd||[],study:P.study||[],self:P.self||[],td:P.td||[]}}
+
+function legacyPlan(d){const s=S.s,k=dk(d),ex=s.ex[k]||[],rest=!ex.length||/^rest/i.test(ex[0]);
+  return{wake:s.wake,sleep:s.sleep,wmin:s.wmin,wmax:s.wmax,protein:s.protein,rest,ex:rest?[]:ex.slice(),fd:(s.fd[k]||[]).slice(),
+    study:((S.c.plan||{})[k]||[]).map(i=>({s:i.s,h:i.h,nm:(sub(i.s)||{}).n||i.nm||''})),
+    self:S.f.topics.filter(x=>((x.sch||{})[k]||{}).h>0).map(x=>({id:x.id,n:x.n,h:x.sch[k].h,at:x.sch[k].at||''}))}}
+
+function freezeSync(){const t=iso(new Date());for(const mm in S.days){const all=S.days[mm];let ch=false;for(const d in all)if(d<t&&!all[d].fz){all[d].fz=legacyPlan(d);ch=true}if(ch)saveDays(mm)}}
+function items(d){const P=plan(d);return[{k:'wake'},{k:'sleep'},...P.ex.map(t=>({k:'e:'+t})),...P.fd.map(t=>({k:'f:'+t}))]}
+function pct(d){
+  const x=day(d);
+  if(x.pause)return 100;
+  const dn=x.done||{},it=items(d),P=plan(d);
+  const wm=P.wmin>0?1:0;
+  const wd=P.wmin>0&&((x.water||0)>=P.wmin)?1:0;
+  const denom=it.length+wm;
+  if(!denom)return 0;
+  return Math.round(100*(it.filter(i=>dn[i.k]).length+wd)/denom)
+}
+const STREAK_AT=75;
+function streak(){let d=cur,n=0;if(pct(d)<STREAK_AT)d=addD(d,-1);while(n<400&&pct(d)>=STREAK_AT){n++;d=addD(d,-1)}return n}
+function itemStreak(key){let d=cur,n=0;while(n<60&&(day(d).done||{})[key]){n++;d=addD(d,-1)}return n}
+function xp(){let x=0;for(const mm in S.days)for(const d in S.days[mm]){const o=S.days[mm][d];x+=(Object.values(o.done||{}).filter(Boolean).length+Object.values(o.sdone||{}).filter(Boolean).length+Object.values(o.pdone||{}).filter(Boolean).length+Object.values(o.tdone||{}).filter(Boolean).length)*10;if((o.water||0)>=plan(d).wmin)x+=10}return x}
+const sum=(it,t)=>it.filter(i=>i.t==t).reduce((a,i)=>a+i.a,0);
+
+const lbar=(l,r,p,c)=>`<div class="lp"><div class="lph"><span>${l}</span><b>${r}</b></div><div class="bar"><i${c?` class="${c}"`:''} style="width:${Math.max(0,Math.min(100,p||0))}%"></i></div></div>`;
+const mon3=m=>new Date(2000,m-1,1).toLocaleDateString('en',{month:'short'});
+
+const chk=(k,l,dn)=>`<label class="row"><input type="checkbox" data-act="chk" data-k="${esc(k)}" ${dn[k]?'checked':''}><span class="${dn[k]?'dn':''}">${esc(l)}</span></label>`;
+const chkSt=(k,l,dn)=>`<label class="row"><input type="checkbox" data-act="chk" data-k="${esc(k)}" ${dn[k]?'checked':''}><span class="${dn[k]?'dn':''}">${esc(l)}<span class="fire">🔥 ${itemStreak(k)}d</span></span></label>`;
+function meter(k,l,u,steps,v,goal,min){const g=goal>0?goal:1;const p=Math.min(100,Math.round(100*v/g));
+  return `<div class="row" style="border:0;padding-bottom:0"><span>${l}</span><span class="mu">${+v.toFixed(2)} / ${goal} ${u}</span></div><div class="bar"><i style="width:${p}%"></i>${min?`<b style="left:${Math.min(100,100*min/g)}%"></b>`:''}</div><div class="st">${steps.map(s=>`<button data-act="step" data-k="${k}" data-s="${s}">${s>0?'+':'−'} ${Math.abs(s)}</button>`).join('')}</div>`}
+
+function dstat(d){const x=day(d),dn=x.done||{},P=plan(d),fr=(a,pre)=>a.length?a.filter(t=>dn[pre+t]).length/a.length:null,foods=fr(P.fd,'f:'),w=P.wmin>0&&((x.water||0)>=P.wmin)?1:0,sp=planSum(d),se=selfPlan(d);
+  return{str:P.rest?null:fr(P.ex,'e:'),vit:foods==null?w:(foods+w)/2,agi:(['wake','sleep'].filter(k=>dn[k]).length)/2,int:sp.t?sp.d/sp.t:null,sen:se.t?se.d/se.t:null}}
+function statusBox(){const X=xp(),lv=Math.floor(X/200)+1,ps=[...Array(7)].map((_,i)=>dstat(addD(cur,i-6)));
+  const av=k=>{const v=ps.map(o=>o[k]).filter(z=>z!=null);return v.length?Math.round(100*v.reduce((a,b)=>a+b,0)/v.length):0};
+  const st=[['STR',av('str')],['VIT',av('vit')],['AGI',av('agi')],['INT',av('int')],['SEN',av('sen')]],rank=lv>=30?'S':lv>=20?'A':lv>=15?'B':lv>=10?'C':lv>=5?'D':'E';
+  const R=62,C=80,pt=(i,v)=>{const a=(-90+i*72)*Math.PI/180;return[(C+R*v*Math.cos(a)).toFixed(1),(C+R*v*Math.sin(a)).toFixed(1)]};
+  const poly=st.map((q,i)=>pt(i,Math.max(.06,q[1]/100)).join(',')).join(' '),grid=[.33,.66,1].map(g=>`<polygon points="${st.map((_,i)=>pt(i,g).join(',')).join(' ')}" fill="none" stroke="rgba(80,150,255,.3)"/>`).join(''),
+    ax=st.map((q,i)=>{const[a,b]=pt(i,1.3);return `<text x="${a}" y="${b}" fill="#7fb4ff" font-size="10" text-anchor="middle" dominant-baseline="middle">${q[0]}</text>`}).join('');
+  return `<div class="card sys"><small>SYSTEM · PLAYER STATUS</small><div class="sysrow"><div class="sysl"><div class="rank">${rank}</div> <small style="display:inline">RANK</small><div class="lv">LEVEL ${lv}</div><div class="bar xpb"><i style="width:${(X%200)/2}%"></i></div><small>${X%200} / 200 XP · ${streak()} day streak</small>
+  <div class="stats">${st.map(q=>`<span>${q[0]}</span><b>${q[1]}</b>`).join('')}</div></div>
+  <svg viewBox="-14 -14 188 188" width="150" height="150" class="radar">${grid}${ax}<polygon points="${poly}" fill="rgba(56,214,255,.28)" stroke="#38d6ff" stroke-width="1.5"/></svg></div><small>Stats = your last 7 days up to this date</small></div>`}
+function lvCheck(){const lv=Math.floor(xp()/200)+1;let o=0;try{o=+localStorage.getItem('lt:lv')||0;if(lv>o)localStorage.setItem('lt:lv',lv)}catch(e){}
+  if(o&&lv>o){const e=$('#lvup');e.innerHTML='LEVEL UP!<small style="font-size:16px;letter-spacing:.2em">LEVEL '+lv+'</small>';e.classList.add('on');setTimeout(()=>e.classList.remove('on'),2800)}}
+function plannedAhead(){const t=iso(new Date());let n=0;for(const y in S.p)for(const d in S.p[y])if(d>=t&&hasP(S.p[y][d]))n++;return n}
+function onThisDay(){
+  const parts=[];
+  [365,730,1095].forEach(n=>{const d=addD(cur,-n);const x=day(d);
+    if(x&&(Object.keys(x).length)){const p=pct(d);parts.push(`<div class="row nrow"><span>${n==365?'1 year':n==730?'2 years':'3 years'} ago · ${sd2(d)}</span><span class="mu">Health ${p}%${x.water?` · ${+x.water.toFixed(1)}L`:''}</span></div>`)} });
+  if(!parts.length)return '';
+  return `<div class="card"><h3>On this day</h3>${parts.join('')}</div>`;
+}
+function vHome(){const p=pct(cur),x=day(cur),pl=plan(cur),td=pl.td,tn=x.tdone||{};
+  return '<div class="homewrap"><div class="homefix">'+statusBox()+`<div class="tiles">
+  <button class="tile" data-act="go" data-t="health"><div class="ic">${ICONS.health}</div><h2>Health</h2><div class="pc">${p}%</div><small>${+(x.water||0).toFixed(1)}/${pl.wmax} L</small></button>
+  <button class="tile" data-act="go" data-t="college">${colTile()}</button>
+  <button class="tile" data-act="go" data-t="self">${selfTile()}</button>
+  <button class="tile" data-act="go" data-t="plan"><div class="ic">${ICONS.plan}</div><h2>Plan</h2><div class="pc">${plannedAhead()}</div><small>days ahead</small></button>
+  <button class="tile" data-act="go" data-t="money"><div class="ic">${ICONS.money}</div><h2>Money</h2><div class="pc">${fmtC(moneyBal(cur.slice(0,7)))}</div><small>${moneyLeft()}</small></button></div>`
+  +(td.length?`<div class="card" style="margin-top:12px"><h3>Tasks · ${dlabel(cur)}</h3>${td.map(t=>`<label class="row"><input type="checkbox" data-act="tkd" data-t="${esc(t)}" ${tn[t]?'checked':''}><span class="${tn[t]?'dn':''}">${esc(t)}</span></label>`).join('')}</div>`:'')+'</div>'+homeFeed()+onThisDay()+'</div>'}
+
+/* ---- home: remaining-task reminders (messages, not boxes) ---- */
+let fa=true;
+function homeFeed(){const x=day(cur),dn=x.done||{},P=plan(cur),L=[],add=(g,t)=>L.push({g,t});
+  if(!dn.wake)add('health','Wake up at '+tm(P.wake));
+  P.ex.filter(t=>!dn['e:'+t]).forEach(t=>add('health','Exercise · '+t));
+  P.fd.filter(t=>!dn['f:'+t]).forEach(t=>add('health','Meal · '+t));
+  const w=x.water||0;if(P.wmin>0&&w<P.wmin)add('health','Water · '+(+(P.wmin-w).toFixed(2))+' L more to reach '+P.wmin+' L');
+  const pr=x.protein||0;if(P.protein>0&&pr<P.protein)add('health','Protein · '+(+(P.protein-pr).toFixed(1))+' g left');
+  if(!dn.sleep)add('health','Sleep by '+tm(P.sleep));
+  const sp=planSum(cur);sp.pl.filter(i=>!sp.sd[i.s]).forEach(i=>add('college','Study · '+(i.nm||'Deleted subject')+' · '+i.h+'h'));
+  S.c.subs.filter(u=>u.bl!=2&&asgLeft(u)>0).forEach(u=>add('college','Assignments · '+u.n+' · '+asgLeft(u)+' left'));
+  S.c.subs.filter(u=>u.bl==1).forEach(u=>add('college','Backlog to clear · '+u.n));
+  const se=selfPlan(cur);se.it.filter(i=>!se.dn[i.id]).forEach(i=>add('self',i.n+' · '+i.h+'h'+(i.at?' at '+tm(i.at):'')));
+  S.f.topics.forEach(t=>{const n=(t.notes||[]).filter(z=>!z.d).length;if(n)add('self','Revise · '+t.n+' · '+n+' missed note'+(n>1?'s':''))});
+  const tag={health:'HEALTH',college:'COLLEGE',self:'SELF'},an=fa;fa=false;
+  return `<div class="feed"><div class="feedh">System notice · ${L.length?L.length+' pending':'all clear'}</div><div class="feedl">`
+  +(L.length?L.map((m,i)=>`<button class="msg ${m.g}${an?' an':''}" data-act="go" data-t="${m.g}" style="animation-delay:${Math.min(i,14)*45}ms"><span class="tg">${tag[m.g]}</span><span class="tx">${esc(m.t)}</span></button>`).join(''):`<div class="msg ok${an?' an':''}"><span class="tg">CLEAR</span><span class="tx">Nothing pending. Rest well.</span></div>`)+`</div></div>`}
+
+function vHealth(){const x=day(cur),s=plan(cur),dn=x.done||{},p=pct(cur),w=x.water||0,
+  nd=(a,pre)=>a.filter(t=>dn[pre+t]).length;
+  const paused=!!x.pause;
+  return `<div class="card"><small>HEALTH · DAILY QUEST</small><div class="big">${p}%${paused?'<span class="paused">PAUSED</span>':''}</div><div class="bar"><i style="width:${p}%"></i></div><small>${dlabel(cur)}</small></div>`
+  +acc('h-routine','Routine',`${['wake','sleep'].filter(k=>dn[k]).length}/2 done`,`${chk('wake','Wake up at '+tm(s.wake),dn)}<div class="row"><span class="mu">Actual wake-up time</span><input type="time" data-act="wake" value="${x.wake||''}"></div>${chk('sleep','Sleep by '+tm(s.sleep),dn)}`)
+  +acc('h-water','Water',`${w>=s.wmin&&s.wmin>0?'✓ ':''}${+w.toFixed(2)} / ${s.wmax} L`,meter('water','Water ('+s.wmin+' to '+s.wmax+' L a day)','L',[-0.25,0.25,0.5],w,s.wmax,s.wmin))
+  +acc('h-ex','Exercise',s.rest?'Rest day':(s.ex.length?`${nd(s.ex,'e:')}/${s.ex.length} done`:'none planned'),s.rest?'<p class="mu" style="margin:0">Rest day. Recover and stretch lightly.</p>':(s.ex.map(t=>chkSt('e:'+t,t,dn)).join('')||'<p class="mu" style="margin:0">Nothing planned for this date.</p>'))
+  +acc('h-food','Food',`${s.fd.length?nd(s.fd,'f:')+'/'+s.fd.length+' · ':''}${x.protein||0} g protein`,`${s.fd.map(t=>chkSt('f:'+t,t,dn)).join('')||'<p class="mu" style="margin:0">No meals planned.</p>'}<div style="height:8px"></div>${meter('protein','Protein','g',[-10,10,25],x.protein||0,s.protein)}`)
+  +acc('h-me','Mood & energy',`${x.mood?['😞','😕','😐','🙂','😄'][x.mood-1]:'·'} ${x.energy?['🪫','😴','😐','⚡','🔥'][x.energy-1]:'·'}`,`<small>How do you feel today? Tap to set (1–5).</small><div class="row" style="border:0"><span class="mu">Mood</span></div><div class="me">${[1,2,3,4,5].map(v=>`<button data-act="mood" data-v="${v}" class="${x.mood==v?'on':''}">${['😞','😕','😐','🙂','😄'][v-1]}</button>`).join('')}</div><div class="row" style="border:0"><span class="mu">Energy</span></div><div class="me">${[1,2,3,4,5].map(v=>`<button data-act="energy" data-v="${v}" class="${x.energy==v?'on':''}">${['🪫','😴','😐','⚡','🔥'][v-1]}</button>`).join('')}</div>`)
+  +`<div class="st" style="margin-bottom:8px">${paused?`<button data-act="unpause">Unpause today</button>`:`<button data-act="pause" data-n="1">Pause today</button><button data-act="pause" data-n="3">Pause 3 days</button>`}</div>`
+  +`<button class="pri" style="width:100%" data-act="pedit" data-d="${cur}">Plan this date</button>`}
+
+/* ---- stats: health + college + self + money ---- */
+let sc='all',mq='',mf='all',mc='',mcs=-1,mqT=0;
+const CI={food:'🍔',travel:'✈️',bills:'💳',study:'📚',shopping:'🛍️',salary:'💰'};
+const txIcon=i=>CI[(i.c||'').toLowerCase()]||(i.t=='in'?'⬆️':'⬇️');
+const dlab=d=>parse(d).toLocaleDateString('en',{weekday:'short',day:'numeric',month:'short'});
+const txIdx=new WeakMap();
+function txRec(i){let r=txIdx.get(i);if(!r){const a=Number(i.a)||0,dt=i.d?parse(i.d):null,dl=dt?dt.toLocaleDateString('en',{weekday:'long',month:'long'})+' '+dt.toLocaleDateString('en',{weekday:'short',month:'short'}):'';
+  r={a,t:i.t,dn:dt?dt.getDate():0,c:(i.c||'Other').toLowerCase(),n:(i.n||'').toLowerCase(),dt:((i.d||'')+' '+dl).toLowerCase()};
+  r.all=[r.c,r.n,r.dt,a,a.toLocaleString('en-IN'),a.toLocaleString('en-IN').replace(/,/g,''),i.t=='in'?'received income':'spent expense',r.dn].join(' ').toLowerCase();txIdx.set(i,r)}return r}
+const TK={date:'d',d:'d',day:'d',cat:'c',category:'c',c:'c',amount:'a',amt:'a',a:'a',note:'n',n:'n',type:'t'};
+function txTerms(){const out=[],re=/([a-z]+):(?:"([^"]*)"|(\S*))|"([^"]*)"|(\S+)/gi,q=mq.toLowerCase();let m;
+  while((m=re.exec(q))){
+    if(m[1]&&TK[m[1]]){const v=(m[2]!=null?m[2]:m[3]||'').trim();if(v)out.push({k:TK[m[1]],v});continue}
+    let t=(m[4]!=null?m[4]:m[0]).trim();if(/^[₹\d.,]+$/.test(t))t=t.replace(/[₹,]/g,'');if(t)out.push({k:'',v:t})}
+  return out}
+const num=x=>parseFloat(String(x).replace(/[₹,]/g,''));
+function txMatch(r,t){const v=t.v;
+  if(t.k=='c')return r.c.includes(v);
+  if(t.k=='n')return r.n.includes(v);
+  if(t.k=='t')return/^(out|spent|spend|expense)/.test(v)?r.t=='out':/^(in|received|income)/.test(v)?r.t=='in':false;
+  if(t.k=='d'){let m;if(/^\d{1,2}$/.test(v))return r.dn==+v;if(m=v.match(/^(\d{1,2})\s*-\s*(\d{1,2})$/))return r.dn>=+m[1]&&r.dn<=+m[2];return r.dt.includes(v)}
+  if(t.k=='a'){let m;if(m=v.match(/^(>=|<=|>|<)\s*([₹\d.,]+)$/)){const n=num(m[2]);return m[1]=='>'?r.a>n:m[1]=='<'?r.a<n:m[1]=='>='?r.a>=n:r.a<=n}
+    if(m=v.match(/^([₹\d.,]+)\s*-\s*([₹\d.,]+)$/))return r.a>=num(m[1])&&r.a<=num(m[2]);
+    if(/^[₹\d.,]+$/.test(v))return r.a==num(v);return false}
+  return r.all.includes(v)}
+function txFiltered(){const ts=txTerms();return(S.money[mon]||[]).filter(i=>{if(mf!='all'&&i.t!=mf)return false;if(mc&&(i.c||'Other')!=mc)return false;if(!ts.length)return true;const r=txRec(i);return ts.every(t=>txMatch(r,t))})}
+function txBody(){const all=S.money[mon]||[],f=txFiltered();
+  if(!all.length)return'<p class="mu" style="margin:0">No entries this month. Open "Add entry" to create one.</p>';
+  if(!f.length)return'<p class="mu" style="margin:0">Nothing matches. Clear the search or pick another filter.</p>';
+  const g={};[...f].reverse().sort((a,b)=>b.d.localeCompare(a.d)).forEach(i=>(g[i.d]=g[i.d]||[]).push(i));
+  const filt=mq.trim()||mf!='all'||mc;
+  return`<div class="txsum">${filt?`Showing ${f.length} of ${all.length} · `:''}${fmt(sum(f,'out'))} spent · ${fmt(sum(f,'in'))} received</div>`
+  +Object.keys(g).map(d=>{const a=g[d],n=sum(a,'in')-sum(a,'out');
+    return`<div class="txg"><div class="txd"><span>${dlab(d)}</span><span class="${n<0?'out':'in'}">${n<0?'−':'+'}${fmt(Math.abs(n))}</span></div>`
+    +a.map(i=>`<div class="tx"><span class="txi">${txIcon(i)}</span><span class="txm"><b>${esc(i.n||i.c||(i.t=='in'?'Received':'Spent'))}</b>${i.n&&i.c?`<small>${esc(i.c)}</small>`:''}</span><b class="txa ${i.t}">${i.t=='in'?'+':'−'}${fmt(i.a)}</b><button class="txx" data-act="deltx" data-id="${i.id}" aria-label="Delete entry">${armed=='tx'+i.id?'Delete?':'×'} </button></div>`).join('')+'</div>'}).join('')}
+
+const CATS={
+ health:{n:'Health',c:'#38d6ff',g:'linear-gradient(0deg,#2563eb,#38d6ff)',f:d=>pct(d)},
+ college:{n:'College',c:'#6d8bff',g:'linear-gradient(0deg,#4338ca,#8ab4ff)',f:d=>{const p=planSum(d);return p.t?Math.round(100*p.d/p.t):null}},
+ self:{n:'Self',c:'#c084fc',g:'linear-gradient(0deg,#7c3aed,#d8b4fe)',f:d=>{const p=selfPlan(d);return p.t?Math.round(100*p.d/p.t):null}}};
+const pad2=n=>String(n).padStart(2,'0');
+const mdays=m=>{const[y,mo]=m.split('-').map(Number),n=new Date(y,mo,0).getDate();return[...Array(n)].map((_,i)=>m+'-'+pad2(i+1))};
+const week7=()=>[...Array(7)].map((_,i)=>addD(cur,i-6));
+const sd2=d=>parse(d).toLocaleDateString('en',{day:'numeric',month:'short'});
+const rdates=()=>{
+  if(rng=='week')return week7();
+  if(rng=='month')return mdays(cur.slice(0,7));
+  const y=cur.slice(0,4);
+  const fromPlans=Object.keys(S.p[y]||{});
+  const fromDays=[];
+  for(const m in S.days){if(m.startsWith(y))for(const d in S.days[m])fromDays.push(d)}
+  return[...new Set([...fromPlans,...fromDays])].filter(d=>d.startsWith(y)).sort()
+};
+const hdates=()=>rng=='year'?rdates().filter(d=>{const x=day(d);return x&&Object.keys(x).length}):rdates();
+const avgS=a=>{const v=a.filter(z=>z!=null);return v.length?Math.round(v.reduce((x,y)=>x+y,0)/v.length):0};
+const rlab=()=>rng=='week'?'last 7 days':rng=='month'?parse(cur.slice(0,7)+'-01').toLocaleDateString('en',{month:'long',year:'numeric'}):cur.slice(0,4);
+
+let ccs={};
+function vChart(k,items,wk){const C=CATS[k],ix=ccs[k],sel=ix!=null&&ix<items.length?items[ix]:null;
+  return `<div class="cols mcols${wk?' wk':''}">${items.map((g,i)=>`<button class="col mcol${ix===i?' sel':''}" data-act="ccol" data-k="${k}" data-i="${i}" aria-label="${esc(g.n)}: ${g.v==null?'no data':g.v+'%'}"><span class="cb mb"><i style="height:${g.v>0?Math.max(3,g.v):0}%;background:${C.g}"></i></span><small>${g.l}</small>${wk?`<small class="pv">${g.v==null?'—':g.v+'%'}</small>`:''}</button>`).join('')}</div>
+  <div class="mrd">${sel?`<b>${esc(sel.n)}</b> <span>${sel.v==null?'<em>no data</em>':sel.v+'%'}</span>`:'<em>Tap a bar to see its value</em>'}</div>`}
+function catChart(k){const C=CATS[k];
+  if(rng=='week')return `<div class="card"><h3>${C.n} · last 7 days</h3>${vChart(k,week7().map(d=>({n:sd2(d),l:sd2(d),v:C.f(d)})),true)}</div>`;
+  if(rng=='month'){const m=cur.slice(0,7),f=parse(m+'-01'),off=(f.getDay()+6)%7;let c='';
+    ['M','T','W','T','F','S','S'].forEach(w=>c+=`<div class="h">${w}</div>`);for(let i=0;i<off;i++)c+='<div class="h"></div>';
+    mdays(m).forEach((d,i)=>{const v=C.f(d);c+=`<div style="background:${v==null?'rgba(80,130,230,.15)':`color-mix(in srgb,${C.c} ${v}%,rgba(80,130,230,.15))`}">${i+1}</div>`});
+    return `<div class="card"><h3>${C.n} · ${rlab()}</h3><div class="cal">${c}</div></div>`}
+  const y=cur.slice(0,4),ds=k=='health'?hdates():rdates();
+  const items=[...Array(12)].map((_,i)=>{const k2=y+'-'+pad2(i+1),v=ds.filter(d=>d.startsWith(k2)).map(C.f).filter(x=>x!=null);return{n:mon3(i+1),l:mon3(i+1),v:v.length?avgS(v):null}});
+  return `<div class="card"><h3>${y} · ${C.n} average by month</h3>${vChart(k,items,false)}</div>`}
+function heatmap(valueFn){const y=cur.slice(0,4);
+  const start=parse(y+'-01-01'),align=new Date(start);
+  align.setDate(align.getDate()-((align.getDay()+6)%7));
+  let html='';
+  for(let w=0;w<53;w++)for(let d=0;d<7;d++){
+    const dt=new Date(align);dt.setDate(dt.getDate()+w*7+d);const ds=iso(dt);
+    if(!ds.startsWith(y)){html+='<div></div>';continue}
+    const v=valueFn(ds);
+    html+=`<div class="${v>0?'hm-'+Math.min(4,Math.floor(v/25)+1):''}" title="${ds} · ${v==null?'—':Math.round(v)}%"></div>`;
+  }
+  return `<div class="heat">${html}</div>`}
+function yearHeat(k){const C=CATS[k];return `<div class="card"><h3>${cur.slice(0,4)} · ${C.n} heatmap</h3>${heatmap(d=>C.f(d))}<small>Each cell is a day. Brighter = higher score.</small></div>`}
+function healthSum(){const ds=rdates();
+  if(rng=='week'){const a=k=>Math.round(ds.reduce((t,d)=>t+(day(d)[k]||0),0)/7*10)/10;
+    return `<div class="card grid"><div><b>${Math.round(ds.reduce((t,d)=>t+pct(d),0)/7)}%</b><small>avg score</small></div><div><b>${a('water')}</b><small>avg water L</small></div><div><b>${a('protein')}</b><small>avg protein g</small></div><div><b>${streak()}</b><small>day streak</small></div></div>`}
+  if(rng=='month')return `<div class="card"><b>${Math.round(ds.reduce((t,d)=>t+pct(d),0)/ds.length)}%</b> <span class="mu">average score · ${streak()} day streak</span></div>`;
+  const v=ds.map(d=>pct(d)).filter(x=>x!=null);
+  return `<div class="card grid"><div><b>${v.length?Math.round(v.reduce((a,b)=>a+b,0)/v.length):0}%</b><small>avg score</small></div><div><b>${streak()}</b><small>day streak</small></div><div><b>${ds.filter(d=>pct(d)>=STREAK_AT).length}</b><small>good days</small></div><div><b>${ds.length}</b><small>days tracked</small></div></div>`
+}
+const hrs=(ds,fn)=>ds.reduce((a,d)=>{const p=fn(d);a.t+=p.t;a.d+=p.d;return a},{t:0,d:0});
+function collegeSum(){const ds=rdates(),c=S.c,h=hrs(ds,planSum),asg=c.subs.filter(u=>u.bl!=2).reduce((a,u)=>a+asgLeft(u),0),syl=c.subs.length?Math.round(c.subs.reduce((a,u)=>a+sylP(u),0)/c.subs.length):0;
+  return `<div class="card grid"><div><b>${avgS(ds.map(CATS.college.f))}%</b><small>avg study</small></div><div><b>${+h.d.toFixed(1)}/${+h.t.toFixed(1)}</b><small>hours done</small></div><div><b>${asg}</b><small>assignments left</small></div><div><b>${syl}%</b><small>syllabus done</small></div></div>`}
+function selfSum(){const ds=rdates(),f=S.f,h=hrs(ds,selfPlan),nt=f.topics.reduce((a,x)=>a+(x.notes||[]).filter(n=>!n.d).length,0);
+  return `<div class="card grid"><div><b>${avgS(ds.map(CATS.self.f))}%</b><small>avg growth</small></div><div><b>${+h.d.toFixed(1)}/${+h.t.toFixed(1)}</b><small>hours done</small></div><div><b>${nt}</b><small>notes to cover</small></div><div><b>${f.topics.length}</b><small>topics</small></div></div>`}
+function mgroups(){const y=cur.slice(0,4);
+  if(rng=='year')return[...Array(12)].map((_,i)=>({l:mon3(i+1),n:mon3(i+1),it:S.money[y+'-'+pad2(i+1)]||[]}));
+  const ds=rng=='week'?week7():mdays(cur.slice(0,7));
+  return ds.map((d,i)=>({n:sd2(d),l:rng=='week'?sd2(d):((i+1)%5==1?String(i+1):'\u00a0'),it:(S.money[d.slice(0,7)]||[]).filter(x=>x.d==d)}))}
+function sMoney(){const gs=mgroups().map(g=>Object.assign({},g,{i:sum(g.it,'in'),o:sum(g.it,'out')})),mx=Math.max(1,...gs.map(g=>Math.max(g.i,g.o))),
+  tin=gs.reduce((a,g)=>a+g.i,0),tout=gs.reduce((a,g)=>a+g.o,0),H=v=>v>0?Math.max(3,Math.round(100*v/mx)):0,cats={},mo=rng=='month',wk=rng=='week';
+  gs.forEach(g=>g.it.filter(i=>i.t=='out').forEach(i=>{const c=i.c||'Other';cats[c]=(cats[c]||0)+i.a}));
+  const cl=Object.entries(cats).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const act=gs.filter(g=>g.i||g.o);
+  const sel=mcs>=0&&mcs<gs.length?gs[mcs]:null,lab=g=>rng=='year'?g.n:g.l;
+  const chart=act.length?`<div class="cols mcols${wk?' wk':''}">${gs.map((g,k)=>`<button class="col mcol${mcs==k?' sel':''}" data-act="mcol" data-i="${k}" aria-label="${esc(g.n)}: received ${fmtC(g.i)}, spent ${fmtC(g.o)}"><span class="cb mb"><i class="mi" style="height:${H(g.i)}%"></i><i class="mo" style="height:${H(g.o)}%"></i></span><small>${lab(g)}</small>${wk?`<small class="in">${g.i?fmtC(g.i):'\u00a0'}</small><small class="out">${g.o?fmtC(g.o):'\u00a0'}</small>`:''}</button>`).join('')}</div>
+    <div class="mrd">${sel?`<b>${esc(sel.n)}</b> ${sel.i||sel.o?`${sel.i?`<span class="in">+${fmtC(sel.i)}</span>`:''} ${sel.o?`<span class="out">−${fmtC(sel.o)}</span>`:''}`:'<em>no entries</em>'}`:'<em>Tap a bar to see its amounts</em>'}</div>
+    <small class="lg">Left bar: received · right bar: spent · tallest bar ${fmtC(mx)}</small>`:'<p class="mu" style="margin:0">No entries in this period.</p>';
+  return `<div class="card"><h3>Money · ${rlab()}</h3>${chart}</div>
+  <div class="card grid"><div><b class="in">${fmtC(tin)}</b><small>received</small></div><div><b class="out">${fmtC(tout)}</b><small>spent</small></div><div><b class="${tin-tout<0?'out':''}">${fmtC(tin-tout)}</b><small>net</small></div><div><b>${fmtC(tout/gs.length)}</b><small>${rng=='year'?'avg / month':'avg / day'}</small></div></div>`
+  +(cl.length?`<div class="card"><h3>Where it went</h3>${cl.map(([k,v])=>{const pc=tout?Math.round(100*v/tout):0;return lbar(esc(k),fmt(v)+' · '+pc+'%',pc)}).join('')}</div>`:'')}
+function overview(){const net=mgroups().reduce((a,g)=>a+sum(g.it,'in')-sum(g.it,'out'),0);
+  return `<div class="card"><h3>Overview · ${rlab()}</h3><div class="grid"><div><b>${avgS(hdates().map(CATS.health.f))}%</b><small>health</small></div><div><b>${avgS(rdates().map(CATS.college.f))}%</b><small>college</small></div><div><b>${avgS(rdates().map(CATS.self.f))}%</b><small>self</small></div><div><b class="${net<0?'out':'in'}">${fmtC(net)}</b><small>money net</small></div></div></div>`}
+function moneySm(){return fmtC(mgroups().reduce((a,g)=>a+sum(g.it,'out'),0))+' spent'}
+function vStats(){const A2=(k,t,sm,b)=>acc('st-'+k,t,sm,b);
+  const F={health:()=>A2('health','Health',avgS(hdates().map(CATS.health.f))+'% avg',catChart('health')+healthSum()+yearHeat('health')),
+   college:()=>A2('college','College',avgS(rdates().map(CATS.college.f))+'% avg',catChart('college')+collegeSum()+yearHeat('college')),
+   self:()=>A2('self','Self',avgS(rdates().map(CATS.self.f))+'% avg',catChart('self')+selfSum()+yearHeat('self')),
+   money:()=>A2('money','Money',moneySm(),sMoney())};
+  return `<div class="seg">${['week','month','year'].map(r=>`<button data-act="rng" data-r="${r}" class="${rng==r?'on':''}">${({week:'7 days',month:'month',year:'year'})[r]}</button>`).join('')}</div>`
+  +`<div class="chips">${[['all','All'],['health','Health'],['college','College'],['self','Self'],['money','Money']].map(([k,l])=>`<button data-act="sc" data-k="${k}" class="${sc==k?'on':''}">${l}</button>`).join('')}</div>`
+  +(sc=='all'?overview():'')+(sc=='all'?Object.keys(F):[sc]).map(k=>F[k]()).join('')}
+
+const fmtC=n=>{const a=Math.abs(n),g=n<0?'-':'';return a>=100000?g+'₹'+(a/100000).toFixed(a>=1000000?0:1)+'L':a>=1000?g+'₹'+(a/1000).toFixed(a>=10000?0:1)+'k':g+'₹'+Math.round(a)};
+const moneyLeft=()=>{const out=sum(S.money[cur.slice(0,7)]||[],'out'),b=S.s.budget;return b>0?fmtC(b-out)+' left':fmtC(out)+' spent'};
+const moneyBal=m=>{const it=S.money[m]||[];return sum(it,'in')-sum(it,'out')};
+function vMoney(){const it=S.money[mon]||[],s=S.s,inc=sum(it,'in'),out=sum(it,'out'),cats={};
+  it.filter(i=>i.t=='out').forEach(i=>cats[i.c||'Other']=(cats[i.c||'Other']||0)+i.a);
+  const cl=Object.entries(cats).sort((a,b)=>b[1]-a[1]),dd=cur.startsWith(mon)?cur:mon+'-01';
+  const ecat={};it.forEach(i=>{const c=i.c||'Other';ecat[c]=(ecat[c]||0)+1});const ecl=Object.keys(ecat).sort((a,b)=>ecat[b]-ecat[a]);
+  return `<div class="hd"><button data-act="mnav" data-s="-1">‹</button><b>${parse(mon+'-01').toLocaleDateString('en',{month:'long',year:'numeric'})}</b><button data-act="mnav" data-s="1">›</button></div>
+  <div class="card grid" style="grid-template-columns:repeat(3,1fr)"><div><b class="in">${fmt(inc)}</b><small>in</small></div><div><b class="out">${fmt(out)}</b><small>spent</small></div><div><b>${fmt(inc-out)}</b><small>balance</small></div></div>`
+  +acc('m-budget','Budget',s.budget>0?`${fmt(out)} / ${fmt(s.budget)}`:'not set',`<div class="row" style="border:0;padding-top:0"><span>Monthly budget (₹)</span><input data-act="cfg" data-k="budget" type="number" value="${s.budget}" style="width:110px"></div>${s.budget>0?`<div class="bar"><i style="width:${Math.min(100,Math.round(100*out/s.budget))}%;${out>s.budget?'background:var(--bad)':''}"></i></div><small>${fmt(out)} of ${fmt(s.budget)}</small>`:''}`)
+  +acc('m-add','Add entry','',`<div class="f"><select id="tt"><option value="out">Spent</option><option value="in">Received</option></select><input id="ta" type="number" inputmode="decimal" placeholder="Amount"><input id="tc" list="cl" placeholder="Category"><input id="td" type="date" value="${dd}"><input id="tn" class="w" placeholder="Note (optional)"><button class="pri w" data-act="addtx">Add</button></div>
+  <datalist id="cl"><option>Food</option><option>Travel</option><option>Bills</option><option>Study</option><option>Shopping</option><option>Salary</option></datalist>`)
+  +acc('m-cat','Where it went',cl.length?`${esc(cl[0][0])} ${fmt(cl[0][1])}`:'nothing yet',cl.map(([k,v])=>{const pc=out?Math.round(100*v/out):0;return lbar(esc(k),fmt(v)+' · '+pc+'%',pc)}).join('')||'<p class="mu" style="margin:0">Nothing spent yet.</p>')
+  +acc('m-ent','Entries',it.length+' entries',`<input class="txs" id="mq" data-act="msearch" type="search" placeholder="Search… or tap a filter below" value="${esc(mq)}" autocomplete="off" enterkeyhint="search">
+  <div class="qk"><span>Filter</span>${[['date:','📅 Date','date:10 · 10-15 · oct · mon'],['cat:','🛍️ Category','cat:food'],['amount:','₹ Amount','amount:>500 · 100-300'],['note:','📝 Note','note:pizza']].map(([k,l,h])=>`<button data-act="mkey" data-k="${k}" title="${h}">${l}</button>`).join('')}${mq?`<button data-act="mclr" class="qx">× Clear</button>`:''}</div>
+  <small class="qh">Examples: date:10 · cat:food · amount:&gt;500 · note:tea (combine freely)</small>
+  <div class="seg">${[['all','All'],['out','Spent'],['in','Received']].map(([k,l])=>`<button data-act="mtype" data-v="${k}" class="${mf==k?'on':''}">${l}</button>`).join('')}</div>
+  ${ecl.length>1?`<div class="txc">${ecl.map(c=>`<button data-act="mcat" data-c="${esc(c)}" class="${mc==c?'on':''}">${esc(c)}</button>`).join('')}</div>`:''}
+  <div id="txl">${txBody()}</div>`)
+  +`<p class="mu" style="font-size:13px">${store?'Saved to your local server.':'Server not reachable. Saved in this browser only.'}</p>`}
+
+/* ---- college ---- */
+let cv='main',selSem=null,selSub=null,armed=null,A=null,busy='',err='';
+const CDEF=()=>({sems:[],subs:[],plan:{}});
+const saveCol=()=>save('college',S.c);
+const sub=id=>S.c.subs.find(x=>x.id==id);
+const semName=id=>(S.c.sems.find(x=>x.id==id)||{}).name||'';
+const arm=k=>{if(armed==k){armed=null;return true}armed=k;return false};
+let armT=0;
+function delTx(id){const k='tx'+id;clearTimeout(armT);
+  if(!arm(k)){armT=setTimeout(()=>{if(armed==k){armed=null;const l=$('#txl');if(l)l.innerHTML=txBody()}},4000);return}
+  const touched=[];
+  for(const m in S.money){const b=S.money[m].length;S.money[m]=S.money[m].filter(i=>String(i.id)!==String(id));if(S.money[m].length!==b)touched.push(m)}
+  touched.forEach(m=>saveMoney(m))}
+const sylP=u=>u.ch.length?Math.round(100*u.ch.filter(c=>c.d).length/u.ch.length):0;
+const asgLeft=u=>u.as.filter(a=>!a.d).length;
+const BL=['Regular','Backlog pending','Backlog cleared'];
+function planSum(d){const pl=plan(d).study,sd=day(d).sdone||{};return{t:pl.reduce((a,i)=>a+i.h,0),d:pl.filter(i=>sd[i.s]).reduce((a,i)=>a+i.h,0),pl,sd}}
+function colTile(){const p=planSum(cur);return `<div class="ic">${ICONS.college}</div><h2>College</h2><div class="pc">${p.t?p.d+'/'+p.t+'h':'—'}</div><small>${p.t?'study today':'set plan'}</small>`}
+const hdr=(v,t)=>`<div class="hd"><button data-act="cgo" data-v="${v}">‹ Back</button><b>${t}</b><span style="width:60px"></span></div>`;
+function vCollege(){return({main:cMain,sem:cSem,sub:cSub}[cv]||cMain)()}
+function cMain(){const c=S.c,p=planSum(cur),left=c.subs.filter(u=>u.bl!=2&&asgLeft(u)>0),bls=c.subs.filter(u=>u.bl==1);
+  return `<div class="card"><small>COLLEGE · STUDY QUEST</small><div class="big">${p.d}/${p.t}h</div><div class="bar"><i style="width:${p.t?Math.round(100*p.d/p.t):0}%"></i></div>
+  ${p.pl.map(i=>{return `<label class="row"><input type="checkbox" data-act="sd" data-s="${i.s}" ${p.sd[i.s]?'checked':''}><span class="${p.sd[i.s]?'dn':''}">${esc(i.nm||'Deleted subject')} · ${i.h}h</span></label>`}).join('')||'<p class="mu" style="margin:0">No study planned today.</p>'}
+  <button data-act="pedit" data-d="${cur}" style="width:100%;margin-top:8px">Plan study for this date</button></div>`
+  +acc('c-asg','Assignments left',left.length?`${left.length} subjects · ${left.reduce((a,u)=>a+asgLeft(u),0)} left`:'none',left.map(u=>`<div class="row"><span>${esc(u.n)}<small>${esc(semName(u.sem))}</small></span><button data-act="osub" data-id="${u.id}">${asgLeft(u)} left</button></div>`).join('')||'<p class="mu" style="margin:0">Nothing pending.</p>')
+  +acc('c-bl','Backlogs to pass',bls.length?bls.length+' pending':'none',bls.map(u=>`<div class="row"><span>${esc(u.n)}<small>${esc(semName(u.sem))} · syllabus ${sylP(u)}%</small></span><button data-act="osub" data-id="${u.id}">Open</button></div>`).join('')||'<p class="mu" style="margin:0">No backlogs. Mark a subject as Backlog pending inside it.</p>')
+  +acc('c-sem','Semesters',c.sems.length+' semesters',`${c.sems.map(m=>`<div class="row"><button data-act="osem" data-id="${m.id}" style="flex:1;text-align:left">${esc(m.name)}</button><small>${c.subs.filter(u=>u.sem==m.id).length} subjects</small></div>`).join('')}<div class="row"><input id="ns" placeholder="Add semester (e.g. Sem 5)" style="flex:1"><button class="pri" data-act="addsem">Add</button></div>`)}
+function cSem(){const m=S.c.sems.find(x=>x.id==selSem);if(!m){cv='main';return cMain()}
+  const us=S.c.subs.filter(u=>u.sem==m.id);
+  return hdr('main',esc(m.name))+`<div class="card"><h3>Subjects</h3>${us.map(u=>`<div class="row"><button data-act="osub" data-id="${u.id}" style="flex:1;text-align:left">${esc(u.n)}${u.bl==1?' ⚠':''}</button><small style="text-align:right">Syllabus ${sylP(u)}%<br>${asgLeft(u)} assignments left</small></div>`).join('')||'<p class="mu" style="margin:0">No subjects yet.</p>'}
+  <div class="row"><input id="nsub" placeholder="Add subject" style="flex:1"><button class="pri" data-act="addsub">Add</button></div></div>
+  <button data-act="delsem" style="width:100%">${armed=='sem'+m.id?'Tap again to delete this semester':'Delete semester'}</button>`}
+function cSub(){const u=sub(selSub);if(!u){cv='main';return cMain()}
+  const lst=(w,l,ph,i)=>`<div class="card"><h3>${l}</h3>${w=='ch'?`<div class="bar"><i style="width:${sylP(u)}%"></i></div>`:''}${u[w].map(x=>`<div class="row"><label style="display:flex;gap:10px;align-items:center;flex:1"><input type="checkbox" data-act="tg" data-w="${w}" data-id="${x.id}" ${x.d?'checked':''}><span class="${x.d?'dn':''}">${esc(x.t)}</span></label><button data-act="del" data-w="${w}" data-id="${x.id}">×</button></div>`).join('')}<div class="row"><input id="${i}" placeholder="${ph}" style="flex:1"><button class="pri" data-act="add" data-w="${w}" data-i="${i}">Add</button></div></div>`;
+  const fl=k=>u.fl.filter(f=>f.k==k).map(f=>`<div class="row"><a href="/files/${f.a}" target="_blank" rel="noopener" style="color:var(--ok);flex:1;word-break:break-all">📄 ${esc(f.n)}</a><button data-act="delf" data-id="${f.id}">${armed=='f'+f.id?'Sure?':'×'}</button></div>`).join('');
+  const up=(k,l)=>A?`<label class="btn">${busy==k?'Uploading…':'+ Upload '+l}<input type="file" accept="application/pdf,image/png,image/jpeg" hidden data-act="upl" data-k="${k}"></label>`:'<small>PDF storage is not available in this view.</small>';
+  return hdr('sem',esc(u.n))+`<div class="card"><h3>${esc(semName(u.sem))} · status</h3><div class="chips">${BL.map((l,i)=>`<button data-act="bl" data-v="${i}" class="${u.bl==i?'on':''}">${l}</button>`).join('')}</div></div>
+  ${lst('ch','Syllabus · '+sylP(u)+'%','Add chapter / topic','nch')}${lst('as','Assignments · '+asgLeft(u)+' left','Add assignment','nas')}
+  <div class="card"><h3>Syllabus PDFs</h3>${fl('syl')}${up('syl','syllabus PDF')}</div>
+  <div class="card"><h3>PYQ papers</h3>${fl('pyq')}${up('pyq','PYQ PDF')}${err?`<small class="out">${err}</small>`:''}</div>
+  <button data-act="delsub" style="width:100%">${armed=='sub'+u.id?'Tap again to delete this subject':'Delete subject'}</button>`}
+function colClick(b,a){const c=S.c,d=b.dataset;if(!/^(delf|delsub|delsem|deltp|deltx)$/.test(a))armed=null;
+  if(a=='cgo'){cv=d.v;err=''}
+  else if(a=='osub'){const u=sub(d.id);selSub=u.id;selSem=u.sem;cv='sub';err=''}
+  else if(a=='osem'){selSem=d.id;cv='sem'}
+  else if(a=='addsem'){const n=$('#ns').value.trim();if(n){c.sems.push({id:uid0(),name:n});saveCol()}}
+  else if(a=='addsub'){const n=$('#nsub').value.trim();if(n){c.subs.push({id:uid0(),sem:selSem,n,bl:0,ch:[],as:[],fl:[]});saveCol()}}
+  else if(a=='add'){const u=sub(selSub),t=$('#'+d.i).value.trim();if(t){u[d.w].push({id:uid0(),t,d:false});saveCol()}}
+  else if(a=='del'){const u=sub(selSub);u[d.w]=u[d.w].filter(x=>x.id!=d.id);saveCol()}
+  else if(a=='bl'){sub(selSub).bl=+d.v;saveCol()}
+  else if(a=='delf'){if(arm('f'+d.id)){const u=sub(selSub),f=u.fl.find(x=>x.id==d.id);u.fl=u.fl.filter(x=>x.id!=d.id);saveCol();if(A&&f)A.delete(f.a).catch(()=>{})}}
+  else if(a=='delsub'){if(arm('sub'+selSub)){const u=sub(selSub);c.subs=c.subs.filter(x=>x.id!=u.id);purgeFuture('study',u.id);saveCol();if(A)u.fl.forEach(f=>A.delete(f.a).catch(()=>{}));cv='sem'}}
+  else if(a=='delsem'){if(arm('sem'+selSem)){const us=c.subs.filter(u=>u.sem==selSem),ids=us.map(u=>u.id);if(A)us.forEach(u=>u.fl.forEach(f=>A.delete(f.a).catch(()=>{})));c.subs=c.subs.filter(u=>u.sem!=selSem);c.sems=c.sems.filter(m=>m.id!=selSem);ids.forEach(id=>purgeFuture('study',id));saveCol();cv='main'}}
+  else return false;
+  return true}
+function colChange(t,a){const d=t.dataset;
+  if(a=='sd'){const sd=Object.assign({},day(cur).sdone||{});sd[d.s]=t.checked;setDay(cur,{sdone:sd})}
+  else if(a=='tg'){sub(selSub)[d.w].find(x=>x.id==d.id).d=t.checked;saveCol()}
+  else if(a=='upl'){const f=t.files[0],k=d.k;t.value='';if(!f||!A)return true;err='';busy=k;A.upload(f).then(r=>{sub(selSub).fl.push({id:uid0(),n:f.name,k,a:r.id});saveCol()}).catch(()=>{err='Upload failed. Use a PDF, PNG or JPG up to 50 MB.'}).finally(()=>{busy='';render()})}
+  else return false;
+  return true}
+
+/* ---- self (topics: schedule, resources, notes) ---- */
+let sv='main',selTop=null;
+const SDEF=()=>({topics:[{id:'t1',n:'Book reading'},{id:'t2',n:'Coding'},{id:'t3',n:'Game dev (Unity)'},{id:'t4',n:'Android Studio'},{id:'t5',n:'Java, Python, C, C++ with DSA'}].map(x=>Object.assign(x,{sch:{},res:[],notes:[]}))});
+const saveSelf=()=>save('self',S.f);
+const tp=id=>S.f.topics.find(x=>x.id==id);
+function selfDates(id){const t=iso(new Date()),r=[];for(const y in S.p)for(const d in S.p[y])if(d>=t){const i=(S.p[y][d].self||[]).find(z=>z.id==id);if(i)r.push([d,i])}return r.sort((a,b)=>a[0].localeCompare(b[0]))}
+const planDays=x=>selfDates(x.id).length;
+function selfPlan(d){const dn=day(d).pdone||{},it=plan(d).self.slice().sort((a,b)=>(a.at||'99').localeCompare(b.at||'99'));
+  return{it,dn,t:it.reduce((a,i)=>a+i.h,0),d:it.filter(i=>dn[i.id]).reduce((a,i)=>a+i.h,0)}}
+function selfTile(){const p=selfPlan(cur);return `<div class="ic">${ICONS.self}</div><h2>Self</h2><div class="pc">${p.t?p.d+'/'+p.t+'h':'—'}</div><small>${p.t?'growth today':'set plan'}</small>`}
+function vSelf(){return(sv=='topic'?sTop:sMain)()}
+function sMain(){const f=S.f,p=selfPlan(cur);
+  return `<div class="card"><small>SELF · GROWTH QUEST</small><div class="big">${p.d}/${p.t}h</div><div class="bar"><i style="width:${p.t?Math.round(100*p.d/p.t):0}%"></i></div>
+  ${p.it.map(i=>{const x=tp(i.id)||{},rs=x.res||[],ns=(x.notes||[]).filter(n=>!n.d);return `<label class="row"><input type="checkbox" data-act="spd" data-id="${i.id}" ${p.dn[i.id]?'checked':''}><span class="${p.dn[i.id]?'dn':''}">${esc(i.n)} · ${i.h}h${i.at?' · '+tm(i.at):''}</span></label>`+(rs.length||ns.length?`<button class="subt" data-act="tgl" data-id="sx-${i.id}">${UI['sx-'+i.id]?'▾':'▸'} Resources ${rs.length} · Notes ${ns.length}</button>`+(UI['sx-'+i.id]?`<div class="sub">${rs.length?`<small>Resources</small><div class="rl">${rs.map(r=>r.u?`<a href="${esc(r.u)}" target="_blank" rel="noopener">${esc(r.t)}</a>`:`<span>${esc(r.t)}</span>`).join('')}</div>`:''}${ns.length?`<small>What I missed (tick when covered)</small>${ns.map(n=>`<label class="row nrow"><input type="checkbox" data-act="ntg" data-tp="${x.id}" data-id="${n.id}"><span>${esc(n.t)}</span></label>`).join('')}`:''}</div>`:''):'')}).join('')||'<p class="mu" style="margin:0">Nothing scheduled today.</p>'}</div>`
+  +acc('s-topics','Topics',f.topics.length+' topics',`${f.topics.map(x=>`<div class="row"><button data-act="otp" data-id="${x.id}" style="flex:1;text-align:left">${esc(x.n)}</button><small style="text-align:right">${planDays(x)} days planned<br>${(x.notes||[]).filter(n=>!n.d).length} to cover</small></div>`).join('')}<div class="row"><input id="ntp" placeholder="Add topic" style="flex:1"><button class="pri" data-act="addtp">Add</button></div>`)}
+function sTop(){const x=tp(selTop);if(!x){sv='main';return sMain()}
+  x.sch=x.sch||{};x.res=x.res||[];x.notes=x.notes||[];
+  return `<div class="hd"><button data-act="sgo">‹ Back</button><b>${esc(x.n)}</b><span style="width:60px"></span></div>
+  <div class="card"><h3>Planned dates</h3>${selfDates(x.id).slice(0,10).map(([d,i])=>`<div class="row"><span>${dlabel(d)}</span><span class="mu">${i.h}h${i.at?' · '+tm(i.at):''}</span></div>`).join('')||'<p class="mu" style="margin:0">No dates planned yet.</p>'}<button data-act="pedit" data-d="${cur}" style="width:100%;margin-top:6px">Plan dates</button></div>
+  <div class="card"><h3>Resources</h3>${x.res.map(r=>`<div class="row"><span style="flex:1;word-break:break-word">${r.u?`<a href="${esc(r.u)}" target="_blank" rel="noopener" style="color:var(--ok)">${esc(r.t)}</a>`:esc(r.t)}</span><button data-act="delres" data-id="${r.id}">×</button></div>`).join('')||'<p class="mu" style="margin:0">No resources yet.</p>'}
+  <div class="f" style="margin-top:8px"><input id="rt" placeholder="Name (book, course, video)"><input id="ru" placeholder="Link (optional)"><button class="pri w" data-act="addres">Add resource</button></div></div>
+  <div class="card"><h3>Notes · what I missed</h3>${[...x.notes].reverse().map(n=>`<div class="row"><label style="display:flex;gap:10px;align-items:flex-start;flex:1"><input type="checkbox" data-act="ntg" data-id="${n.id}" ${n.d?'checked':''}><span class="${n.d?'dn':''}" style="white-space:pre-wrap">${esc(n.t)}<small>${n.dt||''}</small></span></label><button data-act="delnote" data-id="${n.id}">×</button></div>`).join('')||'<p class="mu" style="margin:0">Nothing missed yet.</p>'}
+  <textarea id="nn" placeholder="What did you miss or need to revise?"></textarea><button class="pri" style="width:100%" data-act="addnote">Add note</button></div>
+  <button data-act="deltp" style="width:100%">${armed=='tp'+x.id?'Tap again to delete this topic':'Delete topic'}</button>`}
+function selfClick(b,a){const f=S.f,d=b.dataset;
+  if(a=='sgo')sv='main';
+  else if(a=='otp'){selTop=d.id;sv='topic'}
+  else if(a=='addtp'){const n=$('#ntp').value.trim();if(n){f.topics.push({id:uid0(),n,sch:{},res:[],notes:[]});saveSelf()}}
+  else if(a=='addres'){const x=tp(selTop),t=$('#rt').value.trim();let u=$('#ru').value.trim();if(t){if(u&&!/^https?:\/\//i.test(u))u='https://'+u;x.res.push({id:uid0(),t,u});saveSelf()}}
+  else if(a=='delres'){const x=tp(selTop);x.res=x.res.filter(r=>r.id!=d.id);saveSelf()}
+  else if(a=='addnote'){const x=tp(selTop),t=$('#nn').value.trim();if(t){x.notes.push({id:uid0(),t,d:false,dt:iso(new Date())});saveSelf()}}
+  else if(a=='delnote'){const x=tp(selTop);x.notes=x.notes.filter(n=>n.id!=d.id);saveSelf()}
+  else if(a=='deltp'){if(arm('tp'+selTop)){purgeFuture('self',selTop);f.topics=f.topics.filter(x=>x.id!=selTop);saveSelf();sv='main'}}
+  else return false;
+  return true}
+function selfChange(t,a){const d=t.dataset;
+  if(a=='spd'){const dn=Object.assign({},day(cur).pdone||{});dn[d.id]=t.checked;setDay(cur,{pdone:dn})}
+  else if(a=='ntg'){tp(d.tp||selTop).notes.find(n=>n.id==d.id).d=t.checked;saveSelf()}
+  else return false;
+  return true}
+
+/* ---- collapsible boxes (closed by default, remembered in this browser) ---- */
+let UI={};try{UI=JSON.parse(localStorage.getItem('lt:ui')||'{}')}catch(e){}if(UI['m-ent']===undefined)UI['m-ent']=true;
+const acc=(id,title,sum,body)=>`<div class="card acc"><button class="acch" data-act="tgl" data-id="${id}"><b>${title}</b><span class="sm">${sum||''}</span><span class="ar">${UI[id]?'▾':'▸'}</span></button>${UI[id]?`<div class="accb">${body}</div>`:''}</div>`;
+/* ---- plan: everything is planned per DATE (no weekday templates) ---- */
+let pd=cur,pm=cur.slice(0,7);
+const dlabel=d=>parse(d).toLocaleDateString('en',{day:'numeric',month:'short',year:'numeric'});
+const ensurePlans=async y=>{if(!S.p[y])S.p[y]=(await load('plans-'+y,{days:{}})).days||{}};
+const savePlans=y=>save('plans-'+y,{days:S.p[y]});
+const hasP=P=>!!(P&&((P.ex||[]).length||(P.fd||[]).length||(P.study||[]).length||(P.self||[]).length||(P.td||[]).length));
+const fz2p=f=>({ex:f.rest?['Rest']:f.ex.slice(),fd:f.fd.slice(),study:f.study.slice(),self:f.self.slice(),td:[]});
+function dp(d){const r=(S.p[d.slice(0,4)]||{})[d];if(r)return r;const f=day(d).fz;return f?fz2p(f):{}}
+function tg(d){const l=(S.s.tv||[]).filter(x=>x.from<=d).sort((a,b)=>a.from.localeCompare(b.from));return l.length?l[l.length-1]:{wake:S.s.wake,sleep:S.s.sleep,wmin:S.s.wmin,wmax:S.s.wmax,protein:S.s.protein}}
+function setP(d,patch){const y=d.slice(0,4);S.p[y]=S.p[y]||{};const o=Object.assign(JSON.parse(JSON.stringify(dp(d))),patch);
+  if(!hasP(o)&&!day(d).fz)delete S.p[y][d];else S.p[y][d]=o;savePlans(y)}
+function purgeFuture(kind,id){const t=iso(new Date()),k=kind=='study'?'study':'self',key=kind=='study'?'s':'id';
+  for(const y in S.p){let ch=false;for(const d in S.p[y])if(d>=t){const P=S.p[y][d],a=P[k]||[],b=a.filter(i=>i[key]!=id);if(b.length!=a.length){P[k]=b;ch=true}}if(ch)savePlans(y)}}
+function migrateWeekly(){
+  const t=iso(new Date()),end=String(+t.slice(0,4)+1)+'-12-31';let d=t;const yrs=new Set();
+  while(d<=end){
+    const y=d.slice(0,4);S.p[y]=S.p[y]||{};yrs.add(y);
+    if(!S.p[y][d]){const k=dk(d);const o={ex:(S.s.ex[k]||[]).slice(),fd:(S.s.fd[k]||[]).slice(),td:[],
+      study:((S.c.plan||{})[k]||[]).map(i=>({s:i.s,h:i.h,nm:(sub(i.s)||{}).n||''})),
+      self:S.f.topics.filter(x=>((x.sch||{})[k]||{}).h>0).map(x=>({id:x.id,n:x.n,h:x.sch[k].h,at:x.sch[k].at||''}))};
+      if(hasP(o))S.p[y][d]=o}
+    d=addD(d,1)
+  }
+  for(const y of yrs)savePlans(y);
+  S.s.mig=1;saveSet()
+}
+function vPlan(){const P=dp(pd),T=tg(pd),t0=iso(new Date()),f=parse(pm+'-01'),n=new Date(f.getFullYear(),f.getMonth()+1,0).getDate(),off=(f.getDay()+6)%7;let c='';
+  ['M','T','W','T','F','S','S'].forEach(w=>c+=`<div class="h">${w}</div>`);for(let i=0;i<off;i++)c+='<div class="h"></div>';
+  for(let i=1;i<=n;i++){const d=pm+'-'+String(i).padStart(2,'0');c+=`<button data-act="psel" data-d="${d}" class="${hasP(dp(d))?'has ':''}${d==pd?'sel ':''}${d==t0?'tod':''}">${i}</button>`}
+  const opt=(arr,id,nm,idk)=>(arr.some(u=>u.id==id)?'':`<option value="${id}" selected>${esc(nm||'Deleted')}</option>`)+arr.map(u=>`<option value="${u.id}" ${u.id==id?'selected':''}>${esc(u.n)}</option>`).join('');
+  const sr=(P.study||[]).map((i,k)=>`<div class="row"><select data-act="pst" data-i="${k}" data-f="s" style="flex:1">${opt(S.c.subs,i.s,i.nm)}</select><input type="number" step="0.5" min="0" value="${i.h}" data-act="pst" data-i="${k}" data-f="h" style="width:70px"><button data-act="pstdel" data-i="${k}">×</button></div>`).join('');
+  const fr=(P.self||[]).map((i,k)=>`<div class="row" style="flex-wrap:wrap"><select data-act="psf" data-i="${k}" data-f="id" style="flex:1">${opt(S.f.topics,i.id,i.n)}</select><input type="number" step="0.5" min="0" value="${i.h}" data-act="psf" data-i="${k}" data-f="h" style="width:64px"><input type="time" value="${i.at||''}" data-act="psf" data-i="${k}" data-f="at"><button data-act="psfdel" data-i="${k}">×</button></div>`).join('');
+  const tx=(l,f2,v,h)=>`<small style="margin-top:6px">${l}</small><textarea data-act="ptx" data-f="${f2}" placeholder="${h||''}">${esc((v||[]).join('\n'))}</textarea>`;
+  const ex=(P.ex||[]).length,fd=(P.fd||[]).length,td=(P.td||[]).length,sh=(P.study||[]).reduce((a,i)=>a+i.h,0),fh=(P.self||[]).reduce((a,i)=>a+i.h,0);
+  return `<div class="hd"><button data-act="pmnav" data-s="-1">‹</button><b>${f.toLocaleDateString('en',{month:'long',year:'numeric'})}</b><button data-act="pmnav" data-s="1">›</button></div>
+  <div class="card"><div class="cal">${c}</div><small style="margin-top:6px">Blue dates already have a plan. Tap a date to plan it.</small>
+  <div class="st" style="margin-top:10px"><button data-act="copywd">Copy from last ${DN[dk(pd)]}</button><button data-act="copynext" data-n="7">Copy → next 7 days</button><button data-act="copynext" data-n="30">→ 30 days</button></div></div>`
+  +acc('p-for','Plan for '+dlabel(pd),`${ex} exercise · ${fd} food · ${td} tasks`,`<div class="row" style="border:0;padding-top:0"><span class="mu">Date</span><input type="date" value="${pd}" data-act="pdate"></div>${pd<t0?'<small>Past date: changing it changes that day\'s score.</small>':''}${tx('Exercise (one per line, write Rest for a rest day)','ex',P.ex)}${tx('Food (one per line)','fd',P.fd)}${tx('Tasks for this date (one per line)','td',P.td)}`)
+  +acc('p-study','Study',`${(P.study||[]).length} subjects · ${sh}h`,`${sr||'<p class="mu" style="margin:0">No study planned.</p>'}<button data-act="pstadd" style="width:100%;margin-top:6px">+ Add subject</button>${S.c.subs.length?'':'<small>Add subjects in College first.</small>'}`)
+  +acc('p-self','Self',`${(P.self||[]).length} topics · ${fh}h`,`${fr||'<p class="mu" style="margin:0">Nothing planned.</p>'}<button data-act="psfadd" style="width:100%;margin-top:6px">+ Add topic</button>`)
+  +acc('p-tg','Targets',`${tm(T.wake)} · ${tm(T.sleep)} · ${T.wmin}-${T.wmax} L`,`<small>Wake, sleep, water and protein. Past dates keep the targets they had.</small>
+  <div class="row"><span>Wake up</span><input id="tw" type="time" value="${T.wake}"></div><div class="row"><span>Sleep</span><input id="ts" type="time" value="${T.sleep}"></div>
+  <div class="row"><span>Water min (L)</span><input id="tmn" type="number" step="0.25" value="${T.wmin}" style="width:90px"></div><div class="row"><span>Water max (L)</span><input id="tmx" type="number" step="0.25" value="${T.wmax}" style="width:90px"></div>
+  <div class="row"><span>Protein (g)</span><input id="tpr" type="number" value="${T.protein}" style="width:90px"></div><div class="row"><span>Apply from</span><input id="tf" type="date" value="${pd<t0?t0:pd}"></div>
+  <button class="pri" style="width:100%;margin-top:8px" data-act="tsave">Save targets</button>`)}
+function planClick(b,a){const d=b.dataset;
+  if(a=='pedit'){tab='plan';pd=d.d;pm=pd.slice(0,7)}
+  else if(a=='psel')pd=d.d;
+  else if(a=='pmnav')pm=shiftMon(pm,+d.s);
+  else if(a=='pstadd'){const u=S.c.subs[0];if(u)setP(pd,{study:[...(dp(pd).study||[]),{s:u.id,h:1,nm:u.n}]})}
+  else if(a=='pstdel')setP(pd,{study:(dp(pd).study||[]).filter((_,i)=>i!=+d.i)});
+  else if(a=='psfadd'){const u=S.f.topics[0];if(u)setP(pd,{self:[...(dp(pd).self||[]),{id:u.id,n:u.n,h:1,at:''}]})}
+  else if(a=='psfdel')setP(pd,{self:(dp(pd).self||[]).filter((_,i)=>i!=+d.i)});
+  else if(a=='copywd'){let s=addD(pd,-7);while(s>=addD(pd,-70)&&!hasP(dp(s)))s=addD(s,-7);if(hasP(dp(s)))setP(pd,JSON.parse(JSON.stringify(dp(s))))}
+  else if(a=='copynext'){const n=+d.n,src=JSON.parse(JSON.stringify(dp(pd)));if(!hasP(src))return true;for(let i=1;i<=n;i++)setP(addD(pd,i),JSON.parse(JSON.stringify(src)))}
+  else if(a=='tsave'){const fr=$('#tf').value||iso(new Date()),e={from:fr,wake:$('#tw').value||'05:30',sleep:$('#ts').value||'22:00',wmin:+$('#tmn').value||0,wmax:+$('#tmx').value||0,protein:+$('#tpr').value||0};
+    if(e.wmin<0)e.wmin=0;if(e.wmax<0)e.wmax=0;if(e.wmax<e.wmin)e.wmax=e.wmin;if(e.protein<0)e.protein=0;
+    S.s.tv=(S.s.tv||[]).filter(x=>x.from!=fr).concat(e);saveSet()}
+  else return false;
+  return true}
+function planChange(t,a){const d=t.dataset;
+  if(a=='ptx')setP(pd,{[d.f]:lines(t.value)});
+  else if(a=='pst'){const l=JSON.parse(JSON.stringify(dp(pd).study||[])),i=l[+d.i];if(d.f=='h')i.h=Math.max(0,parseFloat(t.value)||0);else{i.s=t.value;i.nm=(sub(t.value)||{}).n||''}setP(pd,{study:l})}
+  else if(a=='psf'){const l=JSON.parse(JSON.stringify(dp(pd).self||[])),i=l[+d.i];if(d.f=='h')i.h=Math.max(0,parseFloat(t.value)||0);else if(d.f=='at')i.at=t.value;else{i.id=t.value;i.n=(tp(t.value)||{}).n||''}setP(pd,{self:l})}
+  else if(a=='tkd'){const dn=Object.assign({},day(cur).tdone||{});dn[d.t]=t.checked;setDay(cur,{tdone:dn})}
+  else if(a=='pdate'){if(t.value){pd=t.value;pm=pd.slice(0,7)}}
+  else return false;
+  return true}
+
+/* ---- UI options + settings ---- */
+const PDEF={blur:2,glass:1,corner:1,anim:1,swipe:1,theme:0,mode:0},BLUR=[0,6,11,18],BLABEL=['Off','Soft','Medium','Strong'];
+let PREF=Object.assign({},PDEF);
+try{PREF=Object.assign({},PDEF,JSON.parse(localStorage.getItem('lt:pref')||'{}'))}catch(e){}
+function applyPref(){const r=document.documentElement,b=document.body;
+  r.style.setProperty('--blur',(BLUR[PREF.blur]??11)+'px');
+  b.classList.toggle('neo',PREF.theme==1||PREF.theme==2);b.classList.toggle('st',PREF.theme==2);b.classList.toggle('dk',PREF.theme>=1&&PREF.mode==1);r.style.colorScheme=(PREF.theme>=1&&PREF.mode==0)?'light':'dark';
+  b.classList.toggle('solid',!PREF.glass);b.classList.toggle('nocorner',!PREF.corner);b.classList.toggle('noanim',!PREF.anim)}
+applyPref();
+function savePref(){try{localStorage.setItem('lt:pref',JSON.stringify(PREF))}catch(e){}applyPref()}
+const onoff=(k,l,hint)=>`<div class="row"><span>${l}${hint?`<small>${hint}</small>`:''}</span><div class="st" style="width:140px"><button data-act="pref" data-k="${k}" data-v="1" class="${PREF[k]?'on':''}">On</button><button data-act="pref" data-k="${k}" data-v="0" class="${PREF[k]?'':'on'}">Off</button></div></div>`;
+function vUiOpt(){
+  const seg=(k,arr)=>`<div class="seg" style="margin:10px 0 0">${arr.map((l,i)=>`<button data-act="pref" data-k="${k}" data-v="${i}" class="${PREF[k]==i?'on':''}">${l}</button>`).join('')}</div>`;
+  return `<div class="card"><small>UI OPTIONS</small><div class="big" style="font-size:30px">Look &amp; feel</div><small>These only change how the app looks on this device.</small></div>`
+  +`<div class="card"><h3>Theme</h3><small>Classic is the original blue system look. Soft is a light, rounded look. Studio is a high-end audio hardware look with metallic knobs and crisp shadows. Soft and Studio both have a light and a dark mode.</small>${seg('theme',['Classic','Soft','Studio'])}${PREF.theme>=1?`<div style="height:12px"></div><h3>${PREF.theme==2?'Studio mode':'Soft mode'}</h3>${seg('mode',['Light','Dark'])}`:''}</div>`
+  +`<div class="card"><h3>Menu blur</h3><small>How much the screen behind the side menu is blurred.</small><div class="seg" style="margin:10px 0 0">${BLABEL.map((l,i)=>`<button data-act="pref" data-k="blur" data-v="${i}" class="${PREF.blur==i?'on':''}">${l}</button>`).join('')}</div></div>`
+  +`<div class="card"><h3>Menu panel</h3>${PREF.theme==2?'':onoff('glass','Glass menu','Frosted, see-through side menu')}${PREF.theme==2?onoff('corner','Hardware edges','Crisp shadows on cards'):onoff('corner','Corner accents','Little cyan corners on boxes')}${onoff('anim','Animations','Shine, pulse and slide effects')}</div>`
+  +`<button class="pri" style="width:100%;margin-bottom:8px" data-act="menu">Preview the menu</button>`
+  +`<button style="width:100%" data-act="prefreset">Reset UI options</button>`}
+function vSettings(){
+  return `<div class="card"><small>SETTINGS</small><div class="big" style="font-size:30px">System</div></div>`
+  +`<div class="card"><h3>General</h3>${onoff('swipe','Swipe to open menu','Swipe from the left edge of the screen')}`
+  +`<div class="row"><span>Server<small>Where your data is saved</small></span><b class="${store?'in':'out'}">${store?'Connected':'Offline'}</b></div>`
+  +`<div class="row"><span>Today</span><b>${dlabel(iso(new Date()))}</b></div></div>`
+  +`<div class="card"><h3>About</h3><div class="row"><span>App</span><b>System · Progress</b></div><small>More settings will be added here later.</small></div>`}
+
+const NAVS=[['home','Home'],['health','Health'],['college','College'],['self','Self'],['plan','Plan'],['stats','Stats'],['money','Money']],EXTRA=[['uiopt','UI Options'],['settings','Settings']];
+function buildDrawer(){const it=n=>`<button class="dit" data-act="go" data-t="${n[0]}"><span class="ic">${ICONS[n[0]]||''}</span>${n[1]}</button>`;
+  $('#drawer').innerHTML='<div class="dh"><span>SYSTEM · MENU</span><button class="dx" data-act="menux" aria-label="Close menu">×</button></div>'+NAVS.map(it).join('')+'<div class="dsep"></div><div class="dgrp">PREFERENCES</div>'+EXTRA.map(it).join('')}
+function openMenu(){$('#drawer').classList.add('open');$('#scrim').classList.add('show');document.body.classList.add('menuopen');const m=$('.mbtn');if(m)m.setAttribute('aria-expanded','true')}
+function closeMenu(){const d=$('#drawer');if(!d||!d.classList.contains('open'))return;d.classList.remove('open');$('#scrim').classList.remove('show');document.body.classList.remove('menuopen');const m=$('.mbtn');if(m){m.setAttribute('aria-expanded','false')}}
+document.addEventListener('keydown',e=>{if(e.key=='Escape')closeMenu()});
+let tx0=null,ty0=0;
+document.addEventListener('touchstart',e=>{const t=e.touches[0];tx0=t.clientX;ty0=t.clientY},{passive:true});
+document.addEventListener('touchend',e=>{if(tx0==null)return;const t=e.changedTouches[0],dx=t.clientX-tx0,dy=Math.abs(t.clientY-ty0),open=$('#drawer').classList.contains('open');
+  if(!open&&PREF.swipe&&tx0<22&&dx>70&&dy<50)openMenu();else if(open&&dx<-60&&dy<50)closeMenu();tx0=null},{passive:true});
+
+function digest(){
+  const p=pct(cur),s=planSum(cur),se=selfPlan(cur),x=day(cur);
+  const spent=sum((S.money[cur.slice(0,7)]||[]).filter(i=>i.d==cur),'out');
+  const mood=x.mood?['😞','😕','😐','🙂','😄'][x.mood-1]:'';
+  return `${parse(cur).toLocaleDateString('en',{weekday:'short',day:'numeric',month:'short',year:'numeric'})}\n`+
+    `Health    ${p}%   (streak: ${streak()} days)\n`+
+    `College   ${s.d}/${s.t}h\n`+
+    `Self      ${se.d}/${se.t}h\n`+
+    `Money     ${fmtC(spent)} spent today, ${moneyLeft()}\n`+
+    (mood?`Mood      ${mood}\n`:'')+
+    `Pending   ${(()=>{const p=homeFeedCount();return p?p+' items':'clear'})()}`
+}
+function homeFeedCount(){const x=day(cur),dn=x.done||{},P=plan(cur);let n=0;
+  if(!dn.wake)n++;P.ex.forEach(t=>{if(!dn['e:'+t])n++});P.fd.forEach(t=>{if(!dn['f:'+t])n++});
+  if(!dn.sleep)n++;const sp=planSum(cur);n+=sp.pl.filter(i=>!sp.sd[i.s]).length;
+  const se=selfPlan(cur);n+=se.it.filter(i=>!se.dn[i.id]).length;return n}
+
+async function render(){
+  const m=cur.slice(0,7);await ensureDayMon(m);
+  const y=+cur.slice(0,4);
+  await ensureMon(cur.slice(0,7));await ensureMon(mon);
+  if(tab=='stats'){for(let i=1;i<=12;i++)await ensureMon(cur.slice(0,4)+'-'+pad2(i));await ensureMon(addD(cur,-6).slice(0,7))}
+  await ensurePlans(String(y));await ensurePlans(pm.slice(0,4));await ensurePlans(pd.slice(0,4));
+  _planCache=null;
+  const nm={home:'Home',health:'Health',college:'College',self:'Self',plan:'Plan',stats:'Stats',money:'Money',uiopt:'UI Options',settings:'Settings'};
+  if(!$('#drawer').children.length)buildDrawer();
+  const mo=$('#drawer').classList.contains('open');
+  $('#nav').innerHTML=`<button class="mbtn" data-act="menu" aria-label="Open menu" aria-expanded="${mo}"><span class="bars"><i></i><i></i><i></i></span></button><span class="mcur">${nm[tab]}</span>${tab!='home'?`<button class="hbtn" data-act="go" data-t="home" aria-label="Go to Home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></button>`:''}`;
+  document.querySelectorAll('#drawer .dit').forEach(b=>b.classList.toggle('cur',b.dataset.t==tab));
+  const hd=(tab=='health'||tab=='stats'||(tab=='college'&&cv=='main')||(tab=='self'&&sv=='main'))&&!editing?`<div class="hd"><button data-act="dnav" data-s="-1">‹</button><b>${cur==iso(new Date())?'Today · ':''}${dlabel(cur)}</b><button data-act="dnav" data-s="1">›</button></div>`:'';
+  const fl0=$('.feedl'),sy0=fl0?fl0.scrollTop:0;
+  $('#v').innerHTML=hd+({home:vHome,health:vHealth,college:vCollege,self:vSelf,plan:vPlan,stats:vStats,money:vMoney,uiopt:vUiOpt,settings:vSettings}[tab])();
+  const fl1=$('.feedl');if(fl1&&sy0)fl1.scrollTop=sy0;
+  lvCheck();
+}
+function capture(){}
+
+document.addEventListener('click',async e=>{
+  const b=e.target.closest('button[data-act]');if(!b)return;const a=b.dataset.act;
+  if(a=='menu'){openMenu();return}if(a=='menux'){closeMenu();return}closeMenu();
+  if(a=='mkey'||a=='mclr'){const inp=$('#mq');if(!inp)return;
+    if(a=='mclr')inp.value='';else{const v=inp.value;inp.value=(v&&!/\s$/.test(v)?v+' ':v)+b.dataset.k}
+    mq=inp.value;inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length);
+    const l=$('#txl');if(l)l.innerHTML=txBody();const qx=document.querySelector('.qx');if(a=='mclr'&&qx)qx.remove();return}
+  if(a!='deltx'&&typeof armed=='string'&&armed.startsWith('tx'))armed=null;
+  if(a=='go'){capture();editing=false;armed=null;clearTimeout(armT);tab=b.dataset.t;fa=true}
+  else if(a=='dnav'){armed=null;clearTimeout(armT);cur=addD(cur,+b.dataset.s);mcs=-1;ccs={}}
+  else if(a=='rng'){rng=b.dataset.r;mcs=-1;ccs={}}
+  else if(a=='pref'){PREF[b.dataset.k]=+b.dataset.v;savePref()}
+  else if(a=='prefreset'){PREF=Object.assign({},PDEF);savePref()}
+  else if(a=='sc')sc=b.dataset.k;
+  else if(a=='tgl'){UI[b.dataset.id]=!UI[b.dataset.id];try{localStorage.setItem('lt:ui',JSON.stringify(UI))}catch(e){}}
+  else if(a=='deltx'){delTx(b.dataset.id)}
+  else if(a=='mcol')mcs=mcs==+b.dataset.i?-1:+b.dataset.i;
+  else if(a=='ccol'){const k=b.dataset.k,i=+b.dataset.i;ccs[k]=ccs[k]===i?null:i}
+  else if(a=='pause'){const n=+b.dataset.n;for(let i=0;i<n;i++){const d=addD(cur,i);setDay(d,{pause:true})}}
+  else if(a=='unpause'){setDay(cur,{pause:false})}
+  else if(a=='mood'){const v=+b.dataset.v;setDay(cur,{mood:day(cur).mood==v?0:v})}
+  else if(a=='energy'){const v=+b.dataset.v;setDay(cur,{energy:day(cur).energy==v?0:v})}
+  else if(a=='digest'){const t=digest();navigator.clipboard?.writeText(t).catch(()=>{});alert(t)}
+  else if(colClick(b,a)){}
+  else if(selfClick(b,a)){}
+  else if(planClick(b,a)){}
+  else if(a=='mnav'){mon=shiftMon(mon,+b.dataset.s);mc='';}
+  else if(a=='step'){const k=b.dataset.k;setDay(cur,{[k]:Math.max(0,+((day(cur)[k]||0)+ +b.dataset.s).toFixed(2))})}
+  else if(a=='addtx'){const amt=parseFloat($('#ta').value),d=$('#td').value||cur;if(!(amt>0))return $('#ta').focus();
+    const m=d.slice(0,7);await ensureMon(m);S.money[m].push({id:uid0(),d,t:$('#tt').value,a:amt,c:$('#tc').value.trim(),n:$('#tn').value.trim()});saveMoney(m);mon=m}
+  else if(a=='mtype')mf=b.dataset.v;
+  else if(a=='mcat')mc=mc==b.dataset.c?'':b.dataset.c;
+  render()});
+document.addEventListener('input',e=>{const t=e.target;if(t.dataset&&t.dataset.act=='msearch'){mq=t.value;if(e.isComposing)return;clearTimeout(mqT);
+  mqT=setTimeout(()=>requestAnimationFrame(()=>{const q=document.querySelector('.qk'),x=q&&q.querySelector('.qx');if(q&&mq&&!x)q.insertAdjacentHTML('beforeend','<button data-act="mclr" class="qx">× Clear</button>');else if(x&&!mq)x.remove();if(typeof armed=='string'&&armed.startsWith('tx'))armed=null;const l=$('#txl');if(l)l.innerHTML=txBody()}),110)}});
+document.addEventListener('compositionend',e=>{const t=e.target;if(t.dataset&&t.dataset.act=='msearch')t.dispatchEvent(new Event('input',{bubbles:true}))});
+document.addEventListener('change',e=>{
+  const t=e.target,a=t.dataset.act;if(!a||a=='msearch')return;
+  if(a=='chk'){const dn=Object.assign({},day(cur).done||{});dn[t.dataset.k]=t.checked;setDay(cur,{done:dn})}
+  else if(a=='wake')setDay(cur,{wake:t.value});
+  else if(colChange(t,a)){}
+  else if(selfChange(t,a)){}
+  else if(planChange(t,a)){}
+  else if(a=='cfg'){const k=t.dataset.k;S.s[k]=(k=='wake'||k=='sleep')?(t.value||S.s[k]):Math.max(0,parseFloat(t.value)||0);if(S.s.wmax<S.s.wmin)S.s.wmax=S.s.wmin;saveSet();if(k=='budget')return render()}
+  if(a!='cfg')render()});
+
+(async()=>{
+  await init();
+  S.s=Object.assign(DEF(),await load('health',{}));
+  S.c=Object.assign(CDEF(),await load('college',{}));
+  S.f=Object.assign(SDEF(),await load('self',{}));
+  await migrateDayShards();
+  await loadAllDayMonths();
+  const y0=+cur.slice(0,4);
+  for(let i=y0-5;i<=y0+2;i++)await ensurePlans(String(i));
+  if(!S.s.mig){freezeSync();migrateWeekly()}
+  await render();
+  lvCheck()
+})();

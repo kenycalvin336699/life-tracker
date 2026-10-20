@@ -1,0 +1,436 @@
+:root{color-scheme:dark;--bg:#060b1f;--tx:#e6efff;--mu:#7f93bd;--ac:#3b82ff;--hi:#7fb4ff;--ok:#38d6ff;--bad:#ff5d7a;--bd:rgba(70,140,255,.35);--gl:0 0 16px rgba(47,107,255,.2),inset 0 0 22px rgba(47,107,255,.06);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;color:var(--tx);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:radial-gradient(circle at 50% -10%,#14357a 0%,#080f2a 50%,#050914 100%) fixed;padding-bottom:calc(76px + env(safe-area-inset-bottom,0px))}
+main{max-width:760px;margin:0 auto;padding:12px}
+.card,.tile{background:linear-gradient(160deg,rgba(18,42,98,.65),rgba(7,15,40,.8));border:1px solid var(--bd);border-radius:0;padding:14px;margin:0 0 12px;box-shadow:var(--gl);color:var(--tx)}
+h3,h2{margin:0 0 8px;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--hi);text-shadow:0 0 10px rgba(80,150,255,.7)}
+.mu,small{color:var(--mu)}small{display:block;font-size:12px}
+.big{font-size:44px;font-weight:800;line-height:1;text-shadow:0 0 16px rgba(80,150,255,.8)}
+.bar{position:relative;height:12px;background:rgba(80,130,230,.18);border-radius:999px;margin:8px 0;box-shadow:inset 0 1px 3px rgba(0,0,0,.45)}
+.bar i{display:block;height:100%;background:var(--pg,linear-gradient(90deg,#2563eb,#38d6ff));border-radius:999px;box-shadow:none;transition:width .25s}
+.bar b{position:absolute;top:-3px;bottom:-3px;width:2px;background:#fff;opacity:.7}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid rgba(70,140,255,.15)}
+.row:last-child{border-bottom:0}
+label.row{cursor:pointer;justify-content:flex-start}label.row span{flex:1}
+input[type=checkbox]{width:22px;height:22px;accent-color:#38d6ff}
+.dn{text-decoration:line-through;color:var(--mu)}
+input,select,textarea,button{font:inherit;color:var(--tx)}
+input,select,textarea{background:rgba(5,12,35,.7);border:1px solid var(--bd);border-radius:0;padding:8px;min-width:0;width:100%}
+textarea{min-height:110px;resize:vertical;margin:4px 0 10px}
+.row input:not([type=checkbox]){width:auto}
+button{background:rgba(20,45,105,.6);border:1px solid var(--bd);border-radius:0;padding:8px 12px;cursor:pointer}
+button.pri,.on{background:var(--ac)!important;border-color:var(--ac)!important;color:#fff!important}
+.st{display:flex;gap:8px}.st button{flex:1}
+.hd{display:flex;align-items:center;justify-content:space-between;margin:2px 0 12px}.hd b{font-size:17px}
+.seg,.chips{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}.seg button{flex:1;text-transform:capitalize}.chips button{flex:1;padding:8px 4px}
+.tiles{display:grid;gap:12px}
+@media(min-width:700px){.tiles{grid-template-columns:repeat(3,1fr)}}
+.tile{text-align:left;width:100%;margin:0}
+.tile .ic{font-size:26px}.tile .pc{font-size:34px;font-weight:800;text-shadow:0 0 14px rgba(80,150,255,.8)}
+.lock{opacity:.55;border-style:dashed}
+.lv{font-size:26px;font-weight:800;letter-spacing:.1em;text-shadow:0 0 14px rgba(80,150,255,.9)}
+.cols{display:flex;gap:6px;align-items:flex-end}.col{flex:1;text-align:center}
+.cb{height:110px;background:rgba(80,130,230,.15);border-radius:0;display:flex;align-items:flex-end;overflow:hidden}.cb i{display:block;width:100%;background:linear-gradient(0deg,#2563eb,#38d6ff)}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center}.grid b{font-size:20px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.cal div{aspect-ratio:1;border-radius:0;font-size:12px;display:flex;align-items:center;justify-content:center;background:rgba(80,130,230,.15)}.cal .h{background:none;aspect-ratio:auto;color:var(--mu)}
+.in{color:var(--ok)}.out{color:var(--bad)}
+.f{display:grid;grid-template-columns:1fr 1fr;gap:8px}.f .w{grid-column:1/3}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;align-items:center;gap:12px;background:rgba(6,11,31,.92);border-top:1px solid var(--bd);padding:6px 12px calc(6px + env(safe-area-inset-bottom,0px));z-index:10}
+.card,.tile{position:relative;border:1px solid rgba(80,150,255,.55)}
+.card::before,.tile::before{content:"";position:absolute;top:-1px;left:-1px;width:12px;height:12px;border-top:2px solid var(--ok);border-left:2px solid var(--ok);pointer-events:none}
+.card::after,.tile::after{content:"";position:absolute;bottom:-1px;right:-1px;width:12px;height:12px;border-bottom:2px solid var(--ok);border-right:2px solid var(--ok);pointer-events:none}
+body{font-family:"Rajdhani","Bahnschrift","Arial Narrow",system-ui,sans-serif;font-size:17px;font-weight:500}
+h3,h2{font-weight:700;letter-spacing:.18em}
+.tiles{grid-template-columns:repeat(3,1fr)!important;gap:8px}
+.tile{padding:10px 6px;text-align:center}.tile .ic{font-size:20px}.tile h2{font-size:11px;margin:2px 0 4px}.tile .pc{font-size:20px}
+.btn{display:inline-block;background:rgba(20,45,105,.6);border:1px solid var(--bd);padding:8px 12px;cursor:pointer;margin-top:6px}
+select{min-width:0}a{text-decoration:none}
+.tiles{grid-template-columns:repeat(5,1fr)!important;gap:6px}
+.tile{padding:8px 3px}.tile h2{font-size:10px;letter-spacing:.08em}.tile .pc{font-size:15px;white-space:nowrap}.tile small{font-size:10px}
+.sys{overflow:hidden}
+.sysrow{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}.sysl{flex:1;min-width:150px}
+.rank{display:inline-block;font-size:34px;font-weight:800;line-height:1.1;border:2px solid var(--ok);padding:0 12px;color:var(--ok);text-shadow:0 0 14px #38d6ff;box-shadow:0 0 14px rgba(56,214,255,.5),inset 0 0 12px rgba(56,214,255,.25);animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 0 26px rgba(56,214,255,.9),inset 0 0 16px rgba(56,214,255,.4)}}
+.xpb i{position:relative;overflow:hidden}.xpb i::after{content:"";position:absolute;top:0;bottom:0;width:40%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.7),transparent);animation:shine 2.2s linear infinite}
+@keyframes shine{from{left:-40%}to{left:100%}}
+.stats{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;margin-top:8px;font-size:14px}.stats span{color:var(--mu);letter-spacing:.12em}
+.radar{filter:drop-shadow(0 0 6px rgba(56,214,255,.6))}
+#lvup{position:fixed;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;background:rgba(3,8,24,.88);z-index:20;font-size:38px;letter-spacing:.2em;color:var(--ok);text-shadow:0 0 24px #38d6ff;text-align:center}
+#lvup.on{display:flex}
+.cal button{aspect-ratio:1;padding:0;font-size:13px;background:rgba(80,130,230,.15);border:1px solid transparent}
+.cal button.has{background:rgba(59,130,255,.5);font-weight:700}.cal button.tod{text-decoration:underline}
+.cal button.sel{border-color:var(--ok);box-shadow:0 0 10px var(--ok)}
+.acc{padding:12px 14px}
+.acch{display:flex;width:100%;align-items:center;gap:10px;background:none;border:0;padding:0;text-align:left;cursor:pointer}
+.acch b{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--hi);text-shadow:0 0 10px rgba(80,150,255,.7);font-weight:700}
+.acch .sm{margin-left:auto;color:var(--mu);font-size:13px;text-align:right}
+.acch .ar{color:var(--ok);width:14px;text-align:center}
+.accb{margin-top:10px}
+.sub{margin:0 0 8px 30px;padding:2px 0 2px 10px;border-left:2px solid rgba(70,140,255,.3)}
+.rl{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 6px}.rl a,.rl span{border:1px solid var(--bd);padding:2px 8px;font-size:13px;color:var(--ok)}.rl span{color:var(--mu)}
+.nrow{padding:4px 0;border:0;font-size:14px}
+.subt{display:block;background:none;border:0;padding:0 0 8px 30px;font-size:12px;color:var(--mu);cursor:pointer;text-align:left}
+
+/* ---- home reminder feed (plain messages, no boxes) ---- */
+.feed{margin:16px 2px 0}
+.feedh{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--mu);margin:0 0 6px;text-shadow:0 0 8px rgba(80,150,255,.5)}
+.feedh::after{content:"_";color:var(--ok);margin-left:2px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.msg{display:flex;align-items:baseline;gap:8px;width:100%;background:none;border:0;padding:5px 0 5px 12px;text-align:left;cursor:pointer;font-size:15px;line-height:1.3;position:relative}
+.msg::before{content:"";position:absolute;left:0;top:50%;width:5px;height:5px;background:currentColor;transform:translateY(-50%) rotate(45deg);box-shadow:0 0 8px currentColor}
+.msg .tg{font-size:11px;font-weight:700;letter-spacing:.16em;min-width:64px;flex:none}
+.msg .tx{color:var(--tx);opacity:.92}
+.msg.health{color:#ff7a93}.msg.college{color:#7fa6ff}.msg.self{color:#c99cff}.msg.ok{color:var(--ok);cursor:default}
+.msg.an{animation:msgin .45s both}
+@keyframes msgin{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+/* ---- stats: money bars ---- */
+.accb .card{border:0;box-shadow:none;background:none;padding:0;margin:0 0 10px}.accb .card::before,.accb .card::after{display:none}
+.cb.mb{gap:2px;padding:0 1px}.cb.mb i{width:auto;flex:1}
+.mb .mi{background:linear-gradient(0deg,#0e7490,#38d6ff)}.mb .mo{background:linear-gradient(0deg,#be123c,#ff5d7a)}
+.mcols{gap:2px;align-items:stretch}.mcols.wk{gap:6px}
+.mcols .col{min-width:0;padding:0;border:0!important;background:none!important;box-shadow:none!important;border-radius:0;display:flex;flex-direction:column;gap:3px;align-items:stretch;text-align:center}
+.mcols .col small{display:block;font-size:10px;line-height:1.25;white-space:nowrap;color:var(--mu)}
+.mcols .col small.pv{color:var(--tx)}.mcols .col small.in{color:var(--ok)}.mcols .col small.out{color:var(--bad)}body.neo .mcols .col small.in{color:var(--pos)}
+.mcols .cb{height:140px;width:100%}.mcols .cb.mb{gap:1px;padding:0}.mcols .cb i{min-height:0}
+.mcols .col.sel .cb{outline:2px solid var(--ac);outline-offset:1px}
+.qk{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:0 0 6px}.qk span{font-size:12px;color:var(--mu);margin-right:2px}
+.qk button{padding:5px 10px;font-size:13px;border-radius:999px}.qk .qx{color:var(--bad)}
+.qh{display:block;color:var(--mu);font-size:11px;margin:0 0 10px}
+.mrd{margin:12px 0 2px;font-size:14px;min-height:20px;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}.mrd em{font-style:normal;color:var(--mu)}
+
+/* ---- home: boxes stay fixed, only the notice messages scroll ---- */
+.homewrap{display:flex;flex-direction:column;height:calc(100vh - 104px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));height:calc(100dvh - 104px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));overflow-y:auto;scrollbar-width:none}
+.homewrap::-webkit-scrollbar,.feedl::-webkit-scrollbar{display:none}
+.homefix{flex:none}
+.feed{flex:1 1 0;min-height:170px;display:flex;flex-direction:column;margin-top:10px}
+.feedl{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:16px 0 26px 8px;
+ -webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 16px,#000 calc(100% - 28px),transparent 100%);
+ mask-image:linear-gradient(to bottom,transparent 0,#000 16px,#000 calc(100% - 28px),transparent 100%)}
+.feedh{margin-bottom:0;flex:none}
+/* ---- bottom bar with a menu button, and the left slide-in menu ---- */
+.mbtn,.hbtn{flex:none;width:48px;height:42px;display:flex;align-items:center;justify-content:center;padding:0;color:var(--ok);background:rgba(20,45,105,.5);border:1px solid var(--bd)}
+.bars i{display:block;width:20px;height:2px;margin:4px 0;background:currentColor;box-shadow:0 0 6px currentColor}
+.mcur{font-size:15px;letter-spacing:.16em;text-transform:uppercase;color:var(--hi);text-shadow:0 0 10px rgba(80,150,255,.7)}
+body.menuopen{overflow:hidden}
+#scrim{position:fixed;inset:0;width:100%;height:100%;padding:0;border:0;border-radius:0;background:rgba(3,8,24,0);-webkit-backdrop-filter:blur(0px);backdrop-filter:blur(0px);visibility:hidden;pointer-events:none;transition:background .3s ease,-webkit-backdrop-filter .3s ease,backdrop-filter .3s ease,visibility 0s linear .3s;z-index:40}
+#scrim.show{background:rgba(3,8,24,.34);-webkit-backdrop-filter:blur(var(--blur,11px)) saturate(125%);backdrop-filter:blur(var(--blur,11px)) saturate(125%);visibility:visible;pointer-events:auto;transition:background .3s ease,-webkit-backdrop-filter .3s ease,backdrop-filter .3s ease,visibility 0s}
+#drawer{position:fixed;top:0;bottom:0;left:0;width:min(80vw,300px);z-index:41;display:flex;flex-direction:column;overflow-y:auto;padding:calc(14px + env(safe-area-inset-top,0px)) 12px calc(14px + env(safe-area-inset-bottom,0px));background:linear-gradient(160deg,rgba(24,56,128,.52),rgba(7,15,40,.66));-webkit-backdrop-filter:blur(22px) saturate(150%);backdrop-filter:blur(22px) saturate(150%);border-right:1px solid var(--bd);box-shadow:0 0 40px rgba(47,107,255,.35),14px 0 40px rgba(0,0,0,.35);will-change:transform;transform:translateX(-102%);visibility:hidden;transition:transform .3s cubic-bezier(.2,.8,.2,1),visibility 0s linear .3s}
+#drawer.open{transform:none;visibility:visible;transition:transform .3s cubic-bezier(.2,.8,.2,1),visibility 0s}
+.dh{display:flex;align-items:center;justify-content:space-between;margin:0 0 10px 4px;font-size:12px;letter-spacing:.24em;color:var(--hi);text-shadow:0 0 8px rgba(80,150,255,.6)}
+.dx{padding:4px 10px;font-size:14px}
+.dit{display:flex;align-items:center;gap:12px;width:100%;padding:13px 12px;font-size:17px;text-align:left;color:var(--tx);background:none;border:0;border-left:3px solid transparent}
+.dit .ic{width:26px;text-align:center}
+.dit.cur{border-left-color:var(--ok);color:var(--ok);background:linear-gradient(90deg,rgba(56,214,255,.18),transparent);text-shadow:0 0 10px rgba(56,214,255,.8)}
+.dsep{height:1px;margin:10px 4px;background:linear-gradient(90deg,var(--bd),transparent)}
+.dgrp{margin:2px 0 4px 4px;font-size:11px;letter-spacing:.22em;color:var(--mu)}
+/* ---- UI options ---- */
+body.solid #drawer{background:linear-gradient(160deg,rgba(18,42,98,.98),rgba(7,15,40,.99));-webkit-backdrop-filter:none;backdrop-filter:none}
+body.nocorner .card::before,body.nocorner .card::after,body.nocorner .tile::before,body.nocorner .tile::after{display:none}
+body.noanim *,body.noanim *::before,body.noanim *::after{animation:none!important;transition:none!important}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){#scrim.show{background:rgba(3,8,24,.72)}#drawer{background:linear-gradient(160deg,rgba(18,42,98,.98),rgba(7,15,40,.99))}}
+
+/* ===================== SOFT UI THEME (body.neo) ===================== */
+body.neo{--bg:#ebebec;--sf:#f2f2f3;--tx:#1c1c1e;--mu:#7d7f88;--hi:#1c1c1e;--ac:#2f7cf6;--ok:#2f7cf6;--bad:#e5484d;--pos:#1f9d6b;--bd:rgba(0,0,0,.09);--ins:rgba(0,0,0,.045);--grey:#a4a5ac;--gtx:#1c1c1e;--shd:rgba(0,0,0,.15);--shl:rgba(255,255,255,.95);--glass:rgba(242,242,244,.72);--scr:rgba(130,132,140,.3);--ch:#d6455d;--cc:#3a62d8;--cs:#8a4fd8;
+ --raise:7px 8px 18px var(--shd),-6px -6px 14px var(--shl);--raise-s:3px 4px 9px var(--shd),-3px -3px 8px var(--shl);--inset:inset 3px 3px 7px var(--shd),inset -3px -3px 7px var(--shl);
+ background:var(--bg);color:var(--tx);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;font-weight:500}
+body.neo.dk{--bg:#23252a;--sf:#2b2e34;--tx:#ececee;--mu:#9a9da7;--hi:#ececee;--ac:#4d8fff;--ok:#4d8fff;--bad:#ff6b73;--pos:#3ddc97;--bd:rgba(255,255,255,.09);--ins:rgba(0,0,0,.28);--grey:#5b5e68;--gtx:#fff;--shd:rgba(0,0,0,.55);--shl:rgba(255,255,255,.045);--glass:rgba(38,40,46,.72);--scr:rgba(0,0,0,.5);--ch:#ff7a93;--cc:#7fa6ff;--cs:#c99cff}
+body.neo h3,body.neo h2,body.neo .acch b{color:var(--tx);text-shadow:none;text-transform:none;letter-spacing:0;font-weight:600}
+body.neo h3,body.neo .acch b{font-size:16px}
+body.neo .tile h2{font-size:11px;margin:2px 0 4px}
+body.neo .big,body.neo .lv,body.neo .tile .pc,body.neo .mcur,body.neo .dh,body.neo .feedh{text-shadow:none}
+body.neo .mcur{color:var(--tx);letter-spacing:.06em;font-weight:600}
+body.neo .stats span{letter-spacing:.06em}
+body.neo .card,body.neo .tile{background:var(--sf);border:0;border-radius:22px;box-shadow:var(--raise);color:var(--tx)}
+body.neo .tile{border-radius:18px;box-shadow:var(--raise-s);padding:10px 2px}
+body.neo .tile:active{box-shadow:var(--inset)}
+body.neo .card::before,body.neo .card::after,body.neo .tile::before,body.neo .tile::after{display:none}
+body.neo .accb .card{background:none;box-shadow:none;border-radius:0;padding:0;margin:0 0 10px}
+body.neo .lock{opacity:.55}
+body.neo .acch .ar{color:var(--mu)}
+body.neo .row{border-bottom-color:var(--bd)}
+body.neo .sub{border-left-color:var(--bd)}
+body.neo .rl a,body.neo .rl span{border:0;border-radius:999px;box-shadow:var(--raise-s);padding:3px 11px;background:var(--sf)}
+:where(body.neo) button,body.neo .btn{background:var(--sf);border:0;border-radius:999px;padding:9px 16px;color:var(--tx);font-weight:500;box-shadow:var(--raise-s);transition:box-shadow .15s,background .15s}
+body.neo .btn{display:inline-block}
+:where(body.neo) button:active,body.neo .btn:active{box-shadow:var(--inset)}
+body.neo button.pri,body.neo .on{background:var(--grey)!important;border-color:transparent!important;color:var(--gtx)!important;box-shadow:none!important}
+body.neo .acch,body.neo .subt,body.neo .msg,body.neo .dit{box-shadow:none;border-radius:0}
+body.neo .acch,body.neo .subt,body.neo .msg{background:none}
+body.neo .mbtn,body.neo .hbtn{width:48px;height:42px;border-radius:14px;background:var(--sf);border:0;box-shadow:var(--raise-s);color:var(--tx)}
+body.neo .bars i{box-shadow:none}
+body.neo .hd button{padding:6px 14px}
+body.neo input:not([type=checkbox]),body.neo select{background:transparent;border:0;border-radius:999px;box-shadow:var(--inset);padding:9px 16px;color:var(--tx)}
+body.neo textarea{background:transparent;border:0;border-radius:20px;box-shadow:var(--inset);padding:12px 16px;color:var(--tx)}
+body.neo input:focus-visible,body.neo select:focus-visible,body.neo textarea:focus-visible,body.neo button:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+body.neo input[type=checkbox]{-webkit-appearance:none;appearance:none;width:24px;height:24px;flex:none;margin:0;border-radius:50%;background:var(--sf);box-shadow:var(--raise-s);display:grid;place-items:center;cursor:pointer}
+body.neo input[type=checkbox]:checked{background:var(--grey);box-shadow:var(--raise-s)}
+body.neo input[type=checkbox]:checked::after{content:"";width:6px;height:11px;border:solid #fff;border-width:0 2.5px 2.5px 0;transform:rotate(45deg) translate(-1px,-1px)}
+body.neo .bar{height:12px;border-radius:999px;background:var(--ins);box-shadow:var(--inset);margin:10px 0}
+body.neo .bar i{border-radius:999px;background:var(--pg);box-shadow:none}
+body.neo .bar i::after,body.neo .xpb i::after{display:none}
+body.neo .bar b{background:var(--mu);opacity:.8}
+body.neo .cb{background:var(--ins);border-radius:12px;box-shadow:var(--inset)}
+body.neo .cb i{background:linear-gradient(0deg,#2f7cf6,#7fb2ff)!important;border-radius:8px 8px 0 0}
+body.neo .cb.mb .mi{background:linear-gradient(0deg,#1f9d6b,#5fd8a8)!important}
+body.neo .cb.mb .mo{background:linear-gradient(0deg,#e5484d,#ff8f93)!important}
+body.neo .cal div,body.neo .cal button{border-radius:10px}
+body.neo .cal button.sel{border-color:transparent;box-shadow:0 0 0 2px var(--ac)}
+body.neo .in{color:var(--pos)}
+body.neo .rank{margin:6px 0 8px 4px;border:0;border-radius:14px;background:var(--sf);color:var(--ac);text-shadow:none;box-shadow:var(--raise-s);animation:none}
+body.neo .radar{filter:none}
+body.neo .radar polygon{stroke:var(--bd)}
+body.neo .radar text{fill:var(--mu)}
+body.neo .radar polygon:last-of-type{fill:rgba(47,124,246,.22);stroke:var(--ac)}
+body.neo .msg.health{color:var(--ch)}body.neo .msg.college{color:var(--cc)}body.neo .msg.self{color:var(--cs)}body.neo .msg.ok{color:var(--ok)}
+body.neo .msg::before{box-shadow:none}
+body.neo nav{background:var(--glass);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border-top:0;box-shadow:0 -4px 16px var(--shd)}
+body.neo #scrim.show{background:var(--scr)}
+body.neo #drawer{background:var(--glass);border-right:0;border-radius:0 26px 26px 0;box-shadow:10px 0 32px var(--shd)}
+body.neo.solid #drawer{background:var(--sf);-webkit-backdrop-filter:none;backdrop-filter:none}
+body.neo .dh{color:var(--mu)}
+body.neo .dit{border-left:0;border-radius:16px;margin:2px 0;color:var(--tx);background:none;box-shadow:none}
+body.neo .dit.cur{background:var(--grey);color:var(--gtx);text-shadow:none}
+body.neo .dgrp{color:var(--mu)}
+body.neo #lvup{background:var(--glass)!important;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);color:var(--ac);text-shadow:none}
+
+:root{--pg:linear-gradient(90deg,#2563eb,#38d6ff);--pgs:linear-gradient(90deg,#be123c,#ff5d7a)}
+body.neo{--pg:#0f5c5c;--pgs:#d6455d}
+body.neo.dk{--pg:#2fb3a6;--pgs:#ff6b73}
+.lp{margin:0 0 12px}.lp:last-child{margin-bottom:0}
+.lph{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:14px}
+.lph>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lph>b{font-weight:600;white-space:nowrap}.lph em{font-style:normal;color:var(--mu)}
+.lp .bar{margin:5px 0 0}.lp .bar+.bar{margin-top:4px}
+body .bar i.s{background:var(--pgs)}
+.lg{margin:8px 0 0}
+.txs{margin:2px 0 10px}
+.txsum{font-size:12px;color:var(--mu);margin:0 0 8px}
+.txc{display:flex;gap:6px;overflow-x:auto;margin:0 0 10px;padding:2px 2px 6px;scrollbar-width:none}
+.txc::-webkit-scrollbar{display:none}.txc button{flex:none;padding:6px 12px;font-size:14px}
+.txg{margin:0 0 14px}.txg:last-child{margin-bottom:0}
+.txd{display:flex;justify-content:space-between;font-size:13px;color:var(--mu);padding:2px 2px 6px;border-bottom:1px solid var(--bd)}
+.tx{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bd)}
+.txi{flex:none;width:34px;height:34px;display:grid;place-items:center;border-radius:50%;background:rgba(80,130,230,.16);font-size:16px}
+.txm{flex:1;min-width:0;display:flex;flex-direction:column}
+.txm b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.txa{flex:none;white-space:nowrap}
+.txx{flex:none;min-width:34px;padding:4px 10px;font-size:13px}
+body.neo .txi{background:var(--ins);box-shadow:var(--inset)}
+.hbtn{margin-left:auto;color:var(--ok)}
+.hbtn svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+body.neo .hbtn{color:var(--tx)}
+
+/* ---- new features: per-item streak, heatmap, mood, digest, on-this-day, pause ---- */
+.fire{font-size:12px;color:#ff9a3c;margin-left:6px;white-space:nowrap}
+body.neo .fire{color:#e07c1c}
+.heat{display:grid;grid-template-columns:repeat(53,1fr);gap:2px;margin:10px 0 4px;overflow-x:auto}
+.heat div{aspect-ratio:1;min-width:3px;border-radius:2px;background:rgba(80,130,230,.1)}
+.heat .hm-1{background:rgba(56,214,255,.25)}
+.heat .hm-2{background:rgba(56,214,255,.5)}
+.heat .hm-3{background:rgba(56,214,255,.78)}
+.heat .hm-4{background:#38d6ff}
+body.neo .heat div{background:var(--ins);border-radius:3px}
+body.neo .heat .hm-1{background:color-mix(in srgb,var(--ac) 25%,var(--ins))}
+body.neo .heat .hm-2{background:color-mix(in srgb,var(--ac) 50%,var(--ins))}
+body.neo .heat .hm-3{background:color-mix(in srgb,var(--ac) 75%,var(--ins))}
+body.neo .heat .hm-4{background:var(--ac)}
+.me{display:flex;gap:4px;margin:4px 0 6px}
+.me button{flex:1;padding:6px 2px;font-size:16px;background:rgba(80,130,230,.1);border:1px solid var(--bd);border-radius:0}
+.me button.on{background:var(--ac);border-color:var(--ac);color:#fff}
+.digest{white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,monospace;font-size:12.5px;background:rgba(5,12,35,.7);padding:10px;border:1px solid var(--bd);margin:8px 0;word-break:break-word;line-height:1.5}
+body.neo .digest{background:var(--ins);border:0;border-radius:12px;box-shadow:var(--inset)}
+.paused{display:inline-block;background:rgba(255,93,122,.15);color:var(--bad);border:1px solid var(--bad);padding:1px 8px;font-size:11px;letter-spacing:.15em;margin-left:8px;vertical-align:middle}
+
+/* ===================== STUDIO THEME (body.neo.st) =====================
+   High-end hardware look: studio lighting, crisp shadows, metallic
+   knobs, dark toggle switches, and soft inset panels. */
+body.neo.st {
+  --bg: #e5e6e9;
+  --sf: #ececee;
+  --tx: #1a1a1a;
+  --mu: #76787a;
+  --hi: #1a1a1a;
+  --ac: #e36126; /* The orange accent from the graph */
+  --ok: #e36126;
+  --bad: #d9382b;
+  --pos: #2d9c68;
+  --bd: rgba(0,0,0,.05);
+  --ins: rgba(0,0,0,.04);
+  --grey: #1a1a1a;
+  --gtx: #ffffff;
+  --shd: rgba(0,0,0,.08);
+  --shl: rgba(255,255,255,1);
+  --glass: rgba(240,240,245,.85);
+  --scr: rgba(0,0,0,.15);
+  --ch: #d9382b;
+  --cc: #2f7cf6;
+  --cs: #8a4fd8;
+  
+  --raise: 8px 8px 16px var(--shd), -8px -8px 16px var(--shl);
+  --raise-s: 4px 4px 10px var(--shd), -4px -4px 10px var(--shl);
+  --inset: inset 4px 4px 8px var(--shd), inset -4px -4px 8px var(--shl);
+  
+  font-family: "Space Grotesk", "Inter", system-ui, -apple-system, sans-serif;
+}
+
+body.neo.st h3, body.neo.st h2, body.neo.st .acch b { font-family: "Space Grotesk", sans-serif; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;}
+body.neo.st .big { font-family: "Space Grotesk", sans-serif; font-weight: 700; letter-spacing: -0.02em;}
+body.neo.st .mcur { font-family: "Space Grotesk", sans-serif; letter-spacing: .1em; text-transform: uppercase; font-weight: 600;}
+
+body.neo.st .card, body.neo.st .tile { background: var(--sf); border-radius: 24px; box-shadow: var(--raise); }
+body.neo.st .tile { border-radius: 20px; padding: 16px 8px; }
+body.neo.st .tile:active { box-shadow: var(--inset); }
+
+/* Metallic Toggles (Segmented controls / Buttons) */
+body.neo.st button, body.neo.st .btn { 
+  background: var(--sf); 
+  border-radius: 14px; 
+  padding: 10px 18px; 
+  color: var(--tx); 
+  font-weight: 600; 
+  box-shadow: var(--raise-s); 
+  transition: all .2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+body.neo.st button:active, body.neo.st .btn:active { box-shadow: var(--inset); transform: scale(0.98); }
+
+/* The dark switch from the image */
+body.neo.st button.pri, body.neo.st .on { 
+  background: var(--grey)!important; 
+  color: var(--gtx)!important; 
+  box-shadow: inset 0 2px 4px rgba(255,255,255,0.1), inset 0 -2px 4px rgba(0,0,0,0.4)!important; 
+  transform: translateY(1px);
+}
+
+/* Rounded-square checkboxes with a checkmark (no oval) */
+body.neo.st input[type=checkbox] {
+  width: 28px; height: 28px; 
+  border-radius: 8px; 
+  background: var(--sf); 
+  box-shadow: 3px 3px 6px var(--shd), -3px -3px 6px var(--shl);
+  position: relative; 
+  transition: all .15s;
+}
+body.neo.st input[type=checkbox]:checked {
+  box-shadow: inset 3px 3px 6px var(--shd), inset -3px -3px 6px var(--shl);
+  background: #e0e0e0;
+}
+body.neo.st input[type=checkbox]:checked::after {
+  content: ""; 
+  position: absolute; top: 48%; left: 50%; 
+  width: 6px; height: 11px; 
+  border: solid #1a1a1a;
+  border-width: 0 3px 3px 0;
+  transform: translate(-50%, -50%) rotate(45deg);
+  border-radius: 0;
+  background: none;
+}
+
+/* Inset sliders / tracks */
+body.neo.st .bar { 
+  height: 16px; 
+  border-radius: 999px; 
+  background: var(--ins); 
+  box-shadow: inset 3px 3px 6px var(--shd), inset -3px -3px 6px var(--shl); 
+  overflow: visible;
+}
+body.neo.st .bar i { 
+  border-radius: 999px; 
+  background: linear-gradient(90deg, #222, #555); 
+  box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+  position: relative;
+}
+/* Add a little metallic dot at the end of the bar like a slider thumb */
+body.neo.st .bar i::after {
+  content: ""; position: absolute; right: -4px; top: 50%; width: 20px; height: 20px;
+  background: var(--sf); border-radius: 50%; box-shadow: var(--raise-s);
+  transform: translateY(-50%);
+}
+
+body.neo.st .cb { background: var(--ins); border-radius: 16px; box-shadow: var(--inset); }
+body.neo.st .cb i { background: linear-gradient(0deg, #333, #666)!important; border-radius: 12px 12px 0 0; }
+body.neo.st .cb.mb .mi { background: linear-gradient(0deg, #333, #666)!important; }
+body.neo.st .cb.mb .mo { background: linear-gradient(0deg, #e36126, #ffaa7a)!important; }
+
+body.neo.st input:not([type=checkbox]), body.neo.st select, body.neo.st textarea {
+  background: var(--bg); box-shadow: var(--inset); border-radius: 16px; padding: 12px 18px;
+}
+
+body.neo.st .rank {
+  background: var(--sf); border-radius: 18px; width: 70px; height: 70px; display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--raise-s); font-size: 32px; border: none; color: var(--tx); animation: none;
+}
+body.neo.st nav { background: var(--sf); box-shadow: 0 -8px 24px var(--shd); }
+body.neo.st .mbtn, body.neo.st .hbtn { border-radius: 14px; box-shadow: var(--raise-s); background: var(--sf); color: var(--tx); }
+body.neo.st .dit { border-radius: 16px; margin: 4px 0; font-weight: 600; text-transform: uppercase; letter-spacing: .05em;}
+body.neo.st .dit.cur { background: var(--grey); color: var(--gtx); box-shadow: none; }
+body.neo.st #drawer { background: var(--glass); box-shadow: 12px 0 32px var(--shd); }
+
+/* ---- Studio polish ---- */
+body.neo.st .seg button,body.neo.st .chips button{font-weight:600}
+body.neo.st .me button{border:0;border-radius:14px;background:var(--sf);box-shadow:var(--raise-s);font-size:18px}
+body.neo.st .me button.on{background:var(--grey)!important;color:var(--gtx)!important;box-shadow:var(--inset)!important}
+body.neo.st .cal div{background:var(--ins);box-shadow:var(--inset);border-radius:12px}
+body.neo.st .cal .h{background:none;box-shadow:none}
+body.neo.st .cal button{border:0;border-radius:12px;background:var(--sf);box-shadow:var(--raise-s)}
+body.neo.st .cal button.has{background:color-mix(in srgb,var(--ac) 28%,var(--sf));box-shadow:var(--inset);color:var(--tx);font-weight:700}
+body.neo.st .cal button.tod{text-decoration:none;box-shadow:var(--raise-s),0 0 0 1px var(--mu)}
+body.neo.st .cal button.sel{box-shadow:0 0 0 2px var(--ac)}
+body.neo.st .txd,body.neo.st .tx{border-bottom-color:var(--bd)}
+body.neo.st .paused{border:0;border-radius:999px;box-shadow:var(--inset)}
+body.neo.st .accb .card{margin:0 0 12px}
+
+/* ===================== STUDIO DARK (body.neo.st.dk) =====================
+   Same hardware language, studio lighting turned down: graphite panels,
+   illuminated switches, orange accent, crisp low-key shadows. */
+body.neo.st.dk{
+  --bg:#151619;
+  --sf:#1d1f23;
+  --tx:#ecedef;
+  --mu:#8f939d;
+  --hi:#ecedef;
+  --ac:#f07a3c;
+  --ok:#f07a3c;
+  --bad:#ff6b73;
+  --pos:#3ddc97;
+  --bd:rgba(255,255,255,.06);
+  --ins:rgba(0,0,0,.45);
+  --grey:#f1f2f4;
+  --gtx:#141518;
+  --shd:rgba(0,0,0,.65);
+  --shl:rgba(255,255,255,.045);
+  --glass:rgba(24,26,30,.88);
+  --scr:rgba(0,0,0,.55);
+  --ch:#ff7a93;
+  --cc:#7fa6ff;
+  --cs:#c99cff;
+}
+body.neo.st.dk .bar i{background:linear-gradient(90deg,#e9eaec,#a7abb2)}
+body.neo.st.dk .bar i::after{background:#25272c;box-shadow:var(--raise-s),0 0 0 1px rgba(255,255,255,.09)}
+body.neo.st.dk .cb i{background:linear-gradient(0deg,#a7abb2,#e9eaec)!important}
+body.neo.st.dk .cb.mb .mi{background:linear-gradient(0deg,#a7abb2,#e9eaec)!important}
+body.neo.st.dk .cb.mb .mo{background:linear-gradient(0deg,#c14e1d,#ff9a63)!important}
+body.neo.st.dk input[type=checkbox]:checked{background:#26282d}
+body.neo.st.dk input[type=checkbox]:checked::after{border-color:var(--grey);background:none}
+body.neo.st.dk .tile .ic svg{filter:drop-shadow(1px 1px 1px rgba(0,0,0,.75)) drop-shadow(-1px -1px 1px rgba(255,255,255,.05))}
+body.neo.st.dk nav{box-shadow:0 -8px 24px rgba(0,0,0,.6)}
+body.neo.st.dk #drawer{box-shadow:12px 0 32px rgba(0,0,0,.6)}
+body.neo.st.dk .rank{box-shadow:var(--raise-s),inset 0 0 0 1px rgba(255,255,255,.06)}
+body.neo.st.dk .radar polygon:not(:last-of-type){stroke:rgba(255,255,255,.14)}
+
+/* ============= Theme-aware SVG icons ============= */
+.tile .ic,.dit .ic{display:flex;align-items:center;justify-content:center;flex:none}
+.tile .ic{width:100%;height:24px;margin:0 0 6px;color:var(--ok);font-size:0;line-height:0}
+.tile .ic svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 5px rgba(56,214,255,.55))}
+.dit .ic{width:26px;height:26px;color:inherit}
+.dit .ic svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+body.neo .tile .ic{color:var(--ac)}
+body.neo .tile .ic svg{filter:none;stroke-width:1.9}
+body.neo .dit .ic svg{stroke-width:1.9}
+
+/* Studio specific icons (bold, crisp, almost embossed) */
+body.neo.st .tile .ic{color:var(--tx)}
+body.neo.st .tile .ic svg{filter:drop-shadow(1px 1px 1px rgba(255,255,255,0.8)) drop-shadow(-1px -1px 1px rgba(0,0,0,0.1)); stroke-width:2.2}
+body.neo.st .dit .ic svg{stroke-width:2.2}
